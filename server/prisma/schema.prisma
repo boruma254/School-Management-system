@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  LECTURER
+  STUDENT
+  FINANCE
+}
+
+model User {
+  id        String    @id @default(uuid())
+  fullName  String
+  email     String    @unique
+  password  String
+  role      Role
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  student   Student?
+  lecturer  Lecturer?
+  auditLogs AuditLog[]
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  programs  Program[]
+  lecturers Lecturer[]
+  students  Student[]
+}
+
+model Program {
+  id           String      @id @default(uuid())
+  name         String
+  departmentId String
+  department   Department  @relation(fields: [departmentId], references: [id])
+  students     Student[]
+  units        Unit[]
+  feeStructures FeeStructure[]
+}
+
+model Student {
+  id              String        @id @default(uuid())
+  admissionNumber String        @unique
+  userId          String        @unique
+  programId       String
+  currentSemester Int
+  status          String
+
+  user        User       @relation(fields: [userId], references: [id])
+  program     Program    @relation(fields: [programId], references: [id])
+  enrollments Enrollment[]
+  payments    Payment[]
+  department  Department? @relation(fields: [departmentId], references: [id])
+  departmentId String?
+}
+
+model Lecturer {
+  id           String     @id @default(uuid())
+  userId       String     @unique
+  departmentId String
+
+  user        User       @relation(fields: [userId], references: [id])
+  department  Department @relation(fields: [departmentId], references: [id])
+}
+
+model Unit {
+  id        String     @id @default(uuid())
+  code      String
+  name      String
+  programId String
+  semester  Int
+
+  program     Program     @relation(fields: [programId], references: [id])
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  studentId  String
+  unitId     String
+  semester   Int
+
+  student Student @relation(fields: [studentId], references: [id])
+  unit    Unit    @relation(fields: [unitId], references: [id])
+  grade   Grade?
+}
+
+model Grade {
+  id           String     @id @default(uuid())
+  enrollmentId String     @unique
+  catScore     Float
+  examScore    Float
+  totalScore   Float
+  grade        String
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+}
+
+model FeeStructure {
+  id        String   @id @default(uuid())
+  programId String
+  semester  Int
+  amount    Float
+
+  program Program @relation(fields: [programId], references: [id])
+}
+
+model Payment {
+  id            String    @id @default(uuid())
+  studentId     String
+  amount        Float
+  method        String
+  transactionRef String
+  status        String
+  createdAt     DateTime  @default(now())
+
+  student        Student          @relation(fields: [studentId], references: [id])
+  mpesaTransactions MpesaTransaction[]
+}
+
+model MpesaTransaction {
+  id                String   @id @default(uuid())
+  checkoutRequestId String   @unique
+  merchantRequestId String
+  resultCode        String?
+  resultDesc        String?
+  amount            Float?
+  phoneNumber       String?
+  status            String   @default("PENDING")
+  paymentId         String?
+
+  payment Payment? @relation(fields: [paymentId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+

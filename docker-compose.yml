@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: tvet_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tvet_user
+      POSTGRES_PASSWORD: tvet_password
+      POSTGRES_DB: tvet_erp
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
