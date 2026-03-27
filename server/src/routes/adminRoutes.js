@@ -2,6 +2,7 @@ const express = require('express');
 const authorizeRoles = require('../middleware/roleMiddleware');
 const {
   getDashboard,
+  getFinanceDashboard,
   listPendingStudentApprovals,
   approveStudentByAdmissionNumber,
   approveStudentValidation,
@@ -10,6 +11,11 @@ const {
 const router = express.Router();
 
 router.get('/dashboard', authorizeRoles('ADMIN', 'FINANCE'), getDashboard);
+router.get(
+  '/finance/summary',
+  authorizeRoles('ADMIN', 'FINANCE'),
+  getFinanceDashboard
+);
 
 router.get('/students/pending', authorizeRoles('ADMIN'), listPendingStudentApprovals);
 

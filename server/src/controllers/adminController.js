@@ -1,6 +1,7 @@
 const adminService = require('../services/adminService');
 const { body, param } = require('express-validator');
 const validateRequest = require('../middleware/validateRequest');
+const { getFinanceSummary } = require('../services/financeAnalyticsService');
 
 async function getDashboard(req, res, next) {
   try {
@@ -34,10 +35,20 @@ async function approveStudentByAdmissionNumber(req, res, next) {
   }
 }
 
+async function getFinanceDashboard(req, res, next) {
+  try {
+    const summary = await getFinanceSummary();
+    res.json(summary);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getDashboard,
   listPendingStudentApprovals,
   approveStudentByAdmissionNumber,
+  getFinanceDashboard,
   approveStudentValidation,
 };
 

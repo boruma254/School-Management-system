@@ -16,9 +16,23 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 const app = express();
 
 app.use(helmet());
+const defaultDevCorsOriginRegex = /^http:\/\/localhost:517\d$/;
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow non-browser tools (no Origin header)
+      if (!origin) return callback(null, true);
+
+      const configured = process.env.CORS_ORIGIN;
+      if (configured) return callback(null, origin === configured);
+
+      // Dev-friendly: allow Vite default ports (5173, 5174, ...)
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, defaultDevCorsOriginRegex.test(origin));
+      }
+
+      return callback(null, false);
+    },
     credentials: true,
   })
 );

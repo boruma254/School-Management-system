@@ -56,6 +56,12 @@ async function listStudents() {
       user: true,
       program: true,
       department: true,
+      enrollments: {
+        include: {
+          unit: true,
+        },
+      },
+      payments: true,
     },
   });
 }

@@ -71,7 +71,7 @@ export default function AdminDashboard() {
                   Add/edit students, assign programs, update status.
                 </div>
                 <div className="mt-3 text-sm text-slate-800">
-                  <a className="underline" href="/students">
+                  <a className="underline" href="/dashboard/students">
                     Open students page
                   </a>
                 </div>
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
                   Departments, programs, units/courses, semester setup.
                 </div>
                 <div className="mt-3 text-sm text-slate-800">
-                  <a className="underline" href="/academic">
+                  <a className="underline" href="/dashboard/academic">
                     Open academic page
                   </a>
                 </div>
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
                   Fee structures, payments, M-Pesa integration, receipts.
                 </div>
                 <div className="mt-3 text-sm text-slate-800">
-                  <a className="underline" href="/finance">
+                  <a className="underline" href="/dashboard/finance">
                     Open finance page
                   </a>
                 </div>
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
                   Student reports, academic performance, fee collection and attendance (coming soon).
                 </div>
                 <div className="mt-3 text-sm text-slate-800">
-                  <a className="underline" href="/reports">
+                  <a className="underline" href="/dashboard/reports">
                     Open reports page
                   </a>
                 </div>

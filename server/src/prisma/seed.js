@@ -13,6 +13,14 @@ function computeGradeLetter(catScore, examScore) {
   return 'F';
 }
 
+function padNumber(n, width = 4) {
+  return String(n).padStart(width, '0');
+}
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 async function main() {
   // Shared demo dataset (used by portals)
   const departmentName = 'School of Computer Science';
@@ -250,6 +258,171 @@ async function main() {
           studentId: student.id,
           amount: 20000,
           method: 'MPESA',
+          transactionRef,
+          status: 'SUCCESS',
+        },
+      });
+    }
+  }
+
+  // Bulk demo students (for testing dashboards & CRUD flows)
+  const firstNames = [
+    'Amina',
+    'Brian',
+    'Cynthia',
+    'Dennis',
+    'Esther',
+    'Faith',
+    'George',
+    'Hassan',
+    'Ivy',
+    'James',
+    'Kevin',
+    'Linda',
+    'Mary',
+    'Nancy',
+    'Oscar',
+    'Peter',
+    'Queen',
+    'Ruth',
+    'Samuel',
+    'Terry',
+    'Victor',
+    'Winnie',
+    'Yusuf',
+    'Zainab',
+  ];
+  const lastNames = [
+    'Omondi',
+    'Wanjiku',
+    'Mutiso',
+    'Kamau',
+    'Odhiambo',
+    'Chebet',
+    'Njoroge',
+    'Kiptoo',
+    'Wekesa',
+    'Mwangi',
+    'Achieng',
+    'Maina',
+    'Otieno',
+    'Mbugua',
+    'Barasa',
+    'Onyango',
+  ];
+
+  for (let i = 1; i <= 50; i += 1) {
+    const suffix = padNumber(i, 3);
+    const admissionNumber = `ADM-${2000 + i}`;
+    const email = `student${suffix}@kisitvet.local`;
+    const fullName = `${firstNames[i % firstNames.length]} ${
+      lastNames[i % lastNames.length]
+    }`;
+    const phoneNumber = `07123${padNumber(5000 + i, 5)}`;
+
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      const passwordHash = await bcrypt.hash('Student@12345', 10);
+      user = await prisma.user.create({
+        data: {
+          fullName,
+          email,
+          password: passwordHash,
+          role: 'STUDENT',
+          isActive: true,
+          phoneNumber,
+        },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isActive: true, fullName, phoneNumber },
+      });
+    }
+
+    let student = await prisma.student.findUnique({
+      where: { admissionNumber },
+    });
+
+    if (!student) {
+      student = await prisma.student.create({
+        data: {
+          admissionNumber,
+          userId: user.id,
+          programId: program.id,
+          currentSemester: semester,
+          status: 'ACTIVE',
+          departmentId: department.id,
+        },
+      });
+    } else {
+      student = await prisma.student.update({
+        where: { id: student.id },
+        data: {
+          userId: user.id,
+          programId: program.id,
+          currentSemester: semester,
+          status: 'ACTIVE',
+          departmentId: department.id,
+        },
+      });
+    }
+
+    // Enroll in all seeded units + create grades
+    for (const unit of units) {
+      let enrollment = await prisma.enrollment.findFirst({
+        where: {
+          studentId: student.id,
+          unitId: unit.id,
+          semester,
+        },
+      });
+
+      if (!enrollment) {
+        enrollment = await prisma.enrollment.create({
+          data: {
+            studentId: student.id,
+            unitId: unit.id,
+            semester,
+          },
+        });
+      }
+
+      const catScore = randInt(15, 30); // /30
+      const examScore = randInt(25, 70); // /70
+      const totalScore = catScore + examScore;
+      const gradeLetter = computeGradeLetter(catScore, examScore);
+
+      await prisma.grade.upsert({
+        where: { enrollmentId: enrollment.id },
+        create: {
+          enrollmentId: enrollment.id,
+          catScore,
+          examScore,
+          totalScore,
+          grade: gradeLetter,
+        },
+        update: {
+          catScore,
+          examScore,
+          totalScore,
+          grade: gradeLetter,
+        },
+      });
+    }
+
+    // Payment (some fully paid, some partial)
+    const transactionRef = `TXN-STU-${suffix}`;
+    const existingPayment = await prisma.payment.findFirst({
+      where: { transactionRef },
+    });
+    if (!existingPayment) {
+      const amount = i % 3 === 0 ? 50000 : i % 3 === 1 ? 20000 : 35000;
+      await prisma.payment.create({
+        data: {
+          studentId: student.id,
+          amount,
+          method: i % 2 === 0 ? 'MPESA' : 'CASH',
           transactionRef,
           status: 'SUCCESS',
         },

@@ -9,6 +9,7 @@ const {
   listUnits,
   enrollStudent,
   recordGrade,
+  getDepartmentOverview,
   departmentValidation,
   programValidation,
   unitValidation,
@@ -22,6 +23,11 @@ router.get(
   '/departments',
   authorizeRoles('ADMIN', 'LECTURER'),
   listDepartments
+);
+router.get(
+  '/departments/:id/overview',
+  authorizeRoles('ADMIN', 'LECTURER'),
+  getDepartmentOverview
 );
 router.post(
   '/departments',

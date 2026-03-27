@@ -107,6 +107,15 @@ async function recordGrade(req, res, next) {
   }
 }
 
+async function getDepartmentOverview(req, res, next) {
+  try {
+    const overview = await academicService.getDepartmentOverview(req.params.id);
+    res.json({ overview });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createDepartment,
   listDepartments,
@@ -121,5 +130,6 @@ module.exports = {
   unitValidation,
   enrollmentValidation,
   gradeValidation,
+  getDepartmentOverview,
 };
 

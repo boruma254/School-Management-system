@@ -89,6 +89,91 @@ async function recordGrade(data) {
   return grade;
 }
 
+async function getDepartmentOverview(departmentId) {
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
+    include: {
+      programs: {
+        include: {
+          units: true,
+        },
+      },
+      lecturers: {
+        include: {
+          user: true,
+        },
+      },
+      students: {
+        include: {
+          user: true,
+          program: true,
+          enrollments: {
+            include: {
+              unit: true,
+            },
+          },
+          payments: true,
+        },
+      },
+    },
+  });
+
+  if (!department) {
+    const err = new Error('Department not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const allUnits = new Map();
+  for (const prog of department.programs) {
+    for (const u of prog.units) {
+      allUnits.set(u.id, u);
+    }
+  }
+
+  const students = department.students.map((s) => {
+    const unitsRegistered = s.enrollments.length;
+    const classesAttended = unitsRegistered * 14;
+    const units = s.enrollments.map((e) => e.unit).filter(Boolean);
+    const totalPaid = s.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    return {
+      id: s.id,
+      admissionNumber: s.admissionNumber,
+      fullName: s.user?.fullName || null,
+      email: s.user?.email || null,
+      currentSemester: s.currentSemester,
+      status: s.status,
+      program: s.program ? { id: s.program.id, name: s.program.name } : null,
+      unitsRegistered,
+      classesAttended,
+      units: units.map((u) => ({
+        id: u.id,
+        code: u.code,
+        name: u.name,
+        semester: u.semester,
+      })),
+      totalPaid,
+    };
+  });
+
+  const lecturers = department.lecturers.map((l) => ({
+    id: l.id,
+    fullName: l.user?.fullName || null,
+    email: l.user?.email || null,
+  }));
+
+  return {
+    id: department.id,
+    name: department.name,
+    totalStudents: students.length,
+    totalPrograms: department.programs.length,
+    totalUnits: allUnits.size,
+    lecturers,
+    students,
+  };
+}
+
 module.exports = {
   createDepartment,
   listDepartments,
@@ -98,5 +183,6 @@ module.exports = {
   listUnits,
   enrollStudent,
   recordGrade,
+  getDepartmentOverview,
 };
 

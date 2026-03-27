@@ -27,10 +27,10 @@ import FaqPage from './pages/FaqPage';
 function RootRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/landing" replace />;
-  if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
-  if (user.role === 'STUDENT') return <Navigate to="/student" replace />;
-  if (user.role === 'LECTURER') return <Navigate to="/lecturer" replace />;
-  if (user.role === 'FINANCE') return <Navigate to="/finance" replace />;
+  if (user.role === 'ADMIN') return <Navigate to="/dashboard/admin" replace />;
+  if (user.role === 'STUDENT') return <Navigate to="/dashboard/student" replace />;
+  if (user.role === 'LECTURER') return <Navigate to="/dashboard/lecturer" replace />;
+  if (user.role === 'FINANCE') return <Navigate to="/dashboard/finance" replace />;
   return <Navigate to="/landing" replace />;
 }
 
@@ -62,7 +62,7 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<div>Dashboard</div>} />
+        <Route index element={<RootRedirect />} />
         <Route
           path="admin"
           element={

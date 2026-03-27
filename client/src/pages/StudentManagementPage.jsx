@@ -3,6 +3,9 @@ import api from '../services/api';
 
 export default function StudentManagementPage() {
   const [students, setStudents] = useState([]);
+  const [search, setSearch] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentLoading, setSelectedStudentLoading] = useState(false);
   const [pending, setPending] = useState([]);
   const [admissionNumber, setAdmissionNumber] = useState('');
   const [message, setMessage] = useState('');
@@ -78,6 +81,27 @@ export default function StudentManagementPage() {
       setMessage(err.response?.data?.message || 'Delete failed.');
     }
   };
+
+  const handleView = async (studentId) => {
+    setSelectedStudent(null);
+    setSelectedStudentLoading(true);
+    try {
+      const res = await api.get(`/students/${studentId}`);
+      setSelectedStudent(res.data.student);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSelectedStudentLoading(false);
+    }
+  };
+
+  const filteredStudents = students.filter((s) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    const name = (s.user?.fullName || '').toLowerCase();
+    const admission = (s.admissionNumber || '').toLowerCase();
+    return name.includes(q) || admission.includes(q);
+  });
 
   return (
     <div className="space-y-6">
@@ -167,8 +191,24 @@ export default function StudentManagementPage() {
       </section>
 
       {/* All students */}
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Search students
+            </label>
+            <input
+              type="text"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              placeholder="Search by name or admission number"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
               <th className="px-4 py-2 text-left font-medium text-slate-600">
@@ -192,8 +232,8 @@ export default function StudentManagementPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {students.map((s) => (
-              <tr key={s.id}>
+            {filteredStudents.map((s) => (
+              <tr key={s.id} className="hover:bg-slate-50">
                 <td className="px-4 py-2">{s.admissionNumber}</td>
                 <td className="px-4 py-2">{s.user?.fullName}</td>
                 <td className="px-4 py-2">{s.program?.name}</td>
@@ -253,13 +293,272 @@ export default function StudentManagementPage() {
                     >
                       Delete
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleView(s.id)}
+                      className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      View
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </div>
+
+      {/* Spreadsheet-style overview */}
+      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <div className="border-b px-4 py-2 text-sm font-semibold text-slate-800">
+          Spreadsheet view (all students)
+        </div>
+        <div className="overflow-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-xs">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium text-slate-600">
+                  Admission
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-slate-600">
+                  Name
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-slate-600">
+                  Email
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-slate-600">
+                  Program
+                </th>
+                <th className="px-3 py-2 text-left font-medium text-slate-600">
+                  Department
+                </th>
+                <th className="px-3 py-2 text-right font-medium text-slate-600">
+                  Semester
+                </th>
+                <th className="px-3 py-2 text-right font-medium text-slate-600">
+                  Units
+                </th>
+                <th className="px-3 py-2 text-right font-medium text-slate-600">
+                  Payments
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {students.map((s) => {
+                const unitsCount = s.enrollments ? s.enrollments.length : 0;
+                const totalPaid = (s.payments || []).reduce(
+                  (sum, p) => sum + (p.amount || 0),
+                  0
+                );
+                return (
+                  <tr key={s.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-2">{s.admissionNumber}</td>
+                    <td className="px-3 py-2">{s.user?.fullName}</td>
+                    <td className="px-3 py-2">{s.user?.email}</td>
+                    <td className="px-3 py-2">{s.program?.name}</td>
+                    <td className="px-3 py-2">
+                      {s.department?.name || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {s.currentSemester}
+                    </td>
+                    <td className="px-3 py-2 text-right">{unitsCount}</td>
+                    <td className="px-3 py-2 text-right">
+                      KES {totalPaid.toLocaleString()}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Student detail drawer */}
+      {selectedStudent && (
+        <div className="fixed inset-0 z-40 flex items-start justify-end bg-black/20 p-4">
+          <div className="max-h-full w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-4 shadow-lg">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">
+                {selectedStudent.user?.fullName} ({selectedStudent.admissionNumber})
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSelectedStudent(null)}
+                className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Close
+              </button>
+            </div>
+
+            {selectedStudentLoading ? (
+              <div className="text-sm text-slate-500">Loading details...</div>
+            ) : (
+              <div className="space-y-4 text-sm">
+                <section className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <h3 className="mb-1 text-xs font-semibold uppercase text-slate-500">
+                      Profile
+                    </h3>
+                    <dl className="space-y-1">
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Email</dt>
+                        <dd>{selectedStudent.user?.email}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Phone</dt>
+                        <dd>{selectedStudent.user?.phoneNumber || '-'}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Status</dt>
+                        <dd>{selectedStudent.status}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                  <div>
+                    <h3 className="mb-1 text-xs font-semibold uppercase text-slate-500">
+                      Academic
+                    </h3>
+                    <dl className="space-y-1">
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Program</dt>
+                        <dd>{selectedStudent.program?.name}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Department</dt>
+                        <dd>{selectedStudent.department?.name || '-'}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-slate-500">Current semester</dt>
+                        <dd>{selectedStudent.currentSemester}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="mb-2 text-sm font-semibold text-slate-800">
+                    Units & Grades
+                  </h3>
+                  <div className="overflow-hidden rounded-md border border-slate-200">
+                    <table className="min-w-full divide-y divide-slate-200 text-xs">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-slate-600">
+                            Code
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-slate-600">
+                            Unit
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium text-slate-600">
+                            CAT
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium text-slate-600">
+                            Exam
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium text-slate-600">
+                            Total
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium text-slate-600">
+                            Grade
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {selectedStudent.enrollments?.length ? (
+                          selectedStudent.enrollments.map((e) => (
+                            <tr key={e.id}>
+                              <td className="px-3 py-2">{e.unit?.code}</td>
+                              <td className="px-3 py-2">{e.unit?.name}</td>
+                              <td className="px-3 py-2 text-right">
+                                {e.grade?.catScore ?? '-'}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                {e.grade?.examScore ?? '-'}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                {e.grade?.totalScore ?? '-'}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                {e.grade?.grade ?? '-'}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              className="px-3 py-4 text-center text-slate-500"
+                              colSpan={6}
+                            >
+                              No units or grades recorded yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="mb-2 text-sm font-semibold text-slate-800">
+                    Payments
+                  </h3>
+                  <div className="overflow-hidden rounded-md border border-slate-200">
+                    <table className="min-w-full divide-y divide-slate-200 text-xs">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-slate-600">
+                            Date
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-slate-600">
+                            Method
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium text-slate-600">
+                            Ref
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium text-slate-600">
+                            Amount
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium text-slate-600">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {selectedStudent.payments?.length ? (
+                          selectedStudent.payments.map((p) => (
+                            <tr key={p.id}>
+                              <td className="px-3 py-2">
+                                {new Date(p.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="px-3 py-2">{p.method}</td>
+                              <td className="px-3 py-2">{p.transactionRef}</td>
+                              <td className="px-3 py-2 text-right">
+                                KES {p.amount.toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2 text-right">{p.status}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              className="px-3 py-4 text-center text-slate-500"
+                              colSpan={5}
+                            >
+                              No payments recorded yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

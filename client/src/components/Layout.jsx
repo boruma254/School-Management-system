@@ -4,25 +4,25 @@ import { useAuth } from '../context/AuthContext';
 
 const navItemsByRole = {
   ADMIN: [
-    { to: '/admin', label: 'Dashboard' },
-    { to: '/students', label: 'Students' },
-    { to: '/academic', label: 'Academic' },
-    { to: '/finance', label: 'Finance' },
-    { to: '/reports', label: 'Reports' },
+    { to: '/dashboard/admin', label: 'Dashboard' },
+    { to: '/dashboard/students', label: 'Students' },
+    { to: '/dashboard/academic', label: 'Academic' },
+    { to: '/dashboard/finance', label: 'Finance' },
+    { to: '/dashboard/reports', label: 'Reports' },
   ],
   LECTURER: [
-    { to: '/lecturer', label: 'Dashboard' },
-    { to: '/academic', label: 'Academic' },
+    { to: '/dashboard/lecturer', label: 'Dashboard' },
+    { to: '/dashboard/academic', label: 'Academic' },
   ],
   STUDENT: [
-    { to: '/student', label: 'Dashboard' },
-    { to: '/profile', label: 'My Profile' },
-    { to: '/payments', label: 'Payments' },
-    { to: '/documents', label: 'Documents' },
+    { to: '/dashboard/student', label: 'Dashboard' },
+    { to: '/dashboard/profile', label: 'My Profile' },
+    { to: '/dashboard/payments', label: 'Payments' },
+    { to: '/dashboard/documents', label: 'Documents' },
   ],
   FINANCE: [
-    { to: '/finance', label: 'Dashboard' },
-    { to: '/reports', label: 'Reports' },
+    { to: '/dashboard/finance', label: 'Dashboard' },
+    { to: '/dashboard/reports', label: 'Reports' },
   ],
 };
 
