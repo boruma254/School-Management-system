@@ -16,7 +16,9 @@ const navItemsByRole = {
   ],
   STUDENT: [
     { to: '/student', label: 'Dashboard' },
+    { to: '/profile', label: 'My Profile' },
     { to: '/payments', label: 'Payments' },
+    { to: '/documents', label: 'Documents' },
   ],
   FINANCE: [
     { to: '/finance', label: 'Dashboard' },

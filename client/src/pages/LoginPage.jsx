@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Get role from navigation state or URL
+  const defaultRole = location.state?.defaultRole || '';
+
+  const pendingMessage = useMemo(() => {
+    const pending = searchParams.get('pending');
+    return pending === '1' ? 'Your signup request is pending admin approval.' : '';
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +26,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(
         err.response?.data?.message || 'Login failed. Please try again.'
@@ -35,6 +45,11 @@ export default function LoginPage() {
         <p className="mb-6 text-center text-sm text-slate-500">
           Sign in to The Kisii National Polytechnic ERP
         </p>
+        {pendingMessage && (
+          <div className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {pendingMessage}
+          </div>
+        )}
         {error && (
           <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -73,6 +88,13 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <div className="mt-4 text-center text-sm text-slate-600">
+          New student?{' '}
+          <a className="font-medium text-slate-900 underline" href="/signup">
+            Sign up
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,6 @@
+ADMISSION LETTER
+
+This is a demo document for the TVET ERP system.
+Once the admin approves your admission request, you can download it here.
+
+Student: [will be populated in a real system]

@@ -9,6 +9,11 @@ const {
   updateStudent,
   createStudentValidation,
   idParamValidation,
+  listMyDocuments,
+  downloadMyDocument,
+  updateMyProfile,
+  updateMyProfileValidation,
+  deleteStudent,
 } = require('../controllers/studentController');
 
 const router = express.Router();
@@ -28,6 +33,13 @@ router.post(
 
 router.get('/me', authorizeRoles('STUDENT'), getMyStudent);
 
+router.put(
+  '/me/profile',
+  authorizeRoles('STUDENT'),
+  updateMyProfileValidation,
+  updateMyProfile
+);
+
 router.get(
   '/:id',
   authorizeRoles('ADMIN', 'FINANCE', 'LECTURER', 'STUDENT'),
@@ -41,6 +53,17 @@ router.put(
   authorizeRoles('ADMIN'),
   idParamValidation,
   updateStudent
+);
+
+router.get('/me/documents', authorizeRoles('STUDENT'), listMyDocuments);
+
+router.get('/me/documents/:docId', authorizeRoles('STUDENT'), downloadMyDocument);
+
+router.delete(
+  '/:id',
+  authorizeRoles('ADMIN'),
+  idParamValidation,
+  deleteStudent
 );
 
 module.exports = router;

@@ -92,9 +92,81 @@ async function refresh(refreshToken) {
   }
 }
 
+async function requestStudentSignup(data) {
+  const {
+    fullName,
+    email,
+    password,
+    admissionNumber,
+    currentSemester,
+  } = data;
+
+  const existingEmail = await prisma.user.findUnique({ where: { email } });
+  if (existingEmail) {
+    const err = new Error('Email already in use');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const existingStudent = await prisma.student.findUnique({
+    where: { admissionNumber },
+  });
+  if (existingStudent) {
+    const err = new Error('Admission number already exists');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const program = await prisma.program.findFirst();
+  if (!program) {
+    const err = new Error('No programs found. Please contact admin.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+  const user = await prisma.$transaction(async (tx) => {
+    const createdUser = await tx.user.create({
+      data: {
+        fullName,
+        email,
+        password: hashedPassword,
+        role: 'STUDENT',
+        isActive: false, // student must wait for admin approval
+      },
+    });
+
+    await tx.student.create({
+      data: {
+        admissionNumber,
+        programId: program.id,
+        currentSemester: currentSemester || 1,
+        status: 'PENDING',
+        userId: createdUser.id,
+        departmentId: program.departmentId || null,
+      },
+    });
+
+    return createdUser;
+  });
+
+  return {
+    message: 'Signup request created. Wait for admin approval before logging in.',
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+    },
+  };
+}
+
 module.exports = {
   registerUser,
   login,
   refresh,
+  requestStudentSignup,
 };
 

@@ -3,6 +3,8 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
@@ -12,30 +14,55 @@ import StudentManagementPage from './pages/StudentManagementPage';
 import AcademicManagementPage from './pages/AcademicManagementPage';
 import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
+import SignupPage from './pages/SignupPage';
+import StudentDocumentsPage from './pages/StudentDocumentsPage';
+import StudentProfilePage from './pages/StudentProfilePage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import ResourcesPage from './pages/ResourcesPage';
+import PublicationsPage from './pages/PublicationsPage';
+import NewsletterPage from './pages/NewsletterPage';
+import FaqPage from './pages/FaqPage';
 
-function HomeRedirect() {
+function RootRedirect() {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/landing" replace />;
   if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
   if (user.role === 'STUDENT') return <Navigate to="/student" replace />;
   if (user.role === 'LECTURER') return <Navigate to="/lecturer" replace />;
   if (user.role === 'FINANCE') return <Navigate to="/finance" replace />;
-  return <Navigate to="/login" replace />;
+  return <Navigate to="/landing" replace />;
 }
 
 export default function App() {
+  const { user } = useAuth();
+
   return (
     <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+
+      {/* Public Info Pages */}
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/resources" element={<ResourcesPage />} />
+      <Route path="/publications" element={<PublicationsPage />} />
+      <Route path="/newsletter" element={<NewsletterPage />} />
+      <Route path="/faq" element={<FaqPage />} />
+
+      {/* Protected Routes */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Layout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<HomeRedirect />} />
+        <Route index element={<div>Dashboard</div>} />
         <Route
           path="admin"
           element={
@@ -49,6 +76,22 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={['STUDENT']}>
               <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <StudentProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="documents"
+          element={
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <StudentDocumentsPage />
             </ProtectedRoute>
           }
         />
@@ -101,6 +144,8 @@ export default function App() {
           }
         />
       </Route>
+
+      {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

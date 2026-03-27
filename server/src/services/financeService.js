@@ -153,6 +153,48 @@ async function getReceipt(paymentId, currentUser) {
   return payment;
 }
 
+async function getMyFeeSummary(currentUser) {
+  const student = await prisma.student.findUnique({
+    where: { userId: currentUser.id },
+    include: { program: true },
+  });
+
+  if (!student) {
+    const err = new Error('Student profile not found for this account');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const feeStructures = await prisma.feeStructure.findMany({
+    where: {
+      programId: student.programId,
+      semester: student.currentSemester,
+    },
+    include: { program: true },
+  });
+
+  const feeTotal = feeStructures.reduce((sum, fs) => sum + (fs.amount || 0), 0);
+
+  const paidAgg = await prisma.payment.aggregate({
+    where: {
+      studentId: student.id,
+      status: 'SUCCESS',
+    },
+    _sum: { amount: true },
+  });
+
+  const paidTotal = paidAgg._sum.amount || 0;
+  const feeBalance = Math.max(0, feeTotal - paidTotal);
+
+  return {
+    feeStructures,
+    feeTotal,
+    paidTotal,
+    feeBalance,
+    currentSemester: student.currentSemester,
+  };
+}
+
 module.exports = {
   createFeeStructure,
   listFeeStructures,
@@ -160,5 +202,6 @@ module.exports = {
   handleMpesaCallback,
   listPaymentsByStudent,
   getReceipt,
+  getMyFeeSummary,
 };
 

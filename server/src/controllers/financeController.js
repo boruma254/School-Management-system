@@ -83,6 +83,15 @@ async function getReceipt(req, res, next) {
   }
 }
 
+async function getMyFeeSummary(req, res, next) {
+  try {
+    const summary = await financeService.getMyFeeSummary(req.user);
+    res.json({ summary });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createFeeStructure,
   listFeeStructures,
@@ -90,6 +99,7 @@ module.exports = {
   mpesaCallback,
   listStudentPayments,
   getReceipt,
+  getMyFeeSummary,
   feeStructureValidation,
   mpesaInitValidation,
   studentIdParamValidation,

@@ -1,0 +1,11 @@
+FEE PAYMENT GUIDE
+
+How to pay fees using M-Pesa (sandbox):
+1. Go to the Payments page.
+2. Enter the amount and phone number.
+3. Click “Pay with M-Pesa”.
+4. Complete STK push on your phone.
+
+After payment confirmation, receipts become available.
+
+This is a demo document for the current prototype.

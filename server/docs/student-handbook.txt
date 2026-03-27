@@ -1,0 +1,11 @@
+STUDENT HANDBOOK
+
+Welcome to the TVET ERP system.
+
+In a complete installation, this document would include:
+- Academic policies
+- Attendance guidelines
+- Assessment and grading rules
+- Fee payment procedures
+
+This is a placeholder file to demonstrate document download functionality.

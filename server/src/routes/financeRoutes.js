@@ -6,6 +6,7 @@ const {
   initiateMpesa,
   listStudentPayments,
   getReceipt,
+  getMyFeeSummary,
   feeStructureValidation,
   mpesaInitValidation,
   studentIdParamValidation,
@@ -18,6 +19,12 @@ router.get(
   '/fee-structures',
   authorizeRoles('ADMIN', 'FINANCE'),
   listFeeStructures
+);
+
+router.get(
+  '/students/me/fee-summary',
+  authorizeRoles('STUDENT'),
+  getMyFeeSummary
 );
 router.post(
   '/fee-structures',
