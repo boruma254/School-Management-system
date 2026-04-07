@@ -49,15 +49,17 @@ export default function AcademicManagementPage() {
                 <button
                   type="button"
                   onClick={() => openDepartment(d)}
-                  className="w-full rounded-md px-2 py-1 text-left text-slate-800 hover:bg-slate-100"
+                  className="w-full rounded-md px-2 py-1 text-left text-slate-800 hover:bg-slate-100" 
                 >
-                  {d.name}
+                  {d.name}   
                   {d.students?.length != null && (
                     <span className="ml-2 text-xs text-slate-500">
                       ({d.students.length} students)
                     </span>
                   )}
                 </button>
+
+                
               </li>
             ))}
           </ul>
