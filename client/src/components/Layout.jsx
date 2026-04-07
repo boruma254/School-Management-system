@@ -1,28 +1,29 @@
-import React from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Link, NavLink, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const navItemsByRole = {
   ADMIN: [
-    { to: '/dashboard/admin', label: 'Dashboard' },
-    { to: '/dashboard/students', label: 'Students' },
-    { to: '/dashboard/academic', label: 'Academic' },
-    { to: '/dashboard/finance', label: 'Finance' },
-    { to: '/dashboard/reports', label: 'Reports' },
+    { to: "/dashboard/admin", label: "Dashboard" },
+    { to: "/dashboard/students", label: "Students" },
+    { to: "/dashboard/academic", label: "Academic" },
+    { to: "/dashboard/finance", label: "Finance" },
+    { to: "/dashboard/reports", label: "Reports" },
   ],
   LECTURER: [
-    { to: '/dashboard/lecturer', label: 'Dashboard' },
-    { to: '/dashboard/academic', label: 'Academic' },
+    { to: "/dashboard/lecturer", label: "Dashboard" },
+    { to: "/dashboard/academic", label: "Academic" },
   ],
   STUDENT: [
-    { to: '/dashboard/student', label: 'Dashboard' },
-    { to: '/dashboard/profile', label: 'My Profile' },
-    { to: '/dashboard/payments', label: 'Payments' },
-    { to: '/dashboard/documents', label: 'Documents' },
+    { to: "/dashboard/student", label: "Dashboard" },
+    { to: "/dashboard/profile", label: "My Profile" },
+    { to: "/dashboard/payments", label: "Payments" },
+    { to: "/dashboard/documents", label: "Documents" },
+    { to: "/dashboard/chat", label: "Chat Portal" },
   ],
   FINANCE: [
-    { to: '/dashboard/finance', label: 'Dashboard' },
-    { to: '/dashboard/reports', label: 'Reports' },
+    { to: "/dashboard/finance", label: "Dashboard" },
+    { to: "/dashboard/reports", label: "Reports" },
   ],
 };
 
@@ -48,8 +49,8 @@ export default function Layout() {
                 className={({ isActive }) =>
                   `block rounded-md px-3 py-2 text-sm ${
                     isActive
-                      ? 'bg-slate-800 text-white'
-                      : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+                      ? "bg-slate-800 text-white"
+                      : "text-slate-200 hover:bg-slate-800 hover:text-white"
                   }`
                 }
               >
@@ -90,4 +91,3 @@ export default function Layout() {
     </div>
   );
 }
-

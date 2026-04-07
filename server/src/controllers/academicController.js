@@ -1,37 +1,61 @@
-const { body } = require('express-validator');
-const validateRequest = require('../middleware/validateRequest');
-const academicService = require('../services/academicService');
+const { body, param } = require("express-validator");
+const validateRequest = require("../middleware/validateRequest");
+const academicService = require("../services/academicService");
 
 const departmentValidation = [
-  body('name').isString().notEmpty(),
+  body("name").isString().notEmpty(),
   validateRequest,
 ];
 
 const programValidation = [
-  body('name').isString().notEmpty(),
-  body('departmentId').isString().notEmpty(),
+  body("name").isString().notEmpty(),
+  body("departmentId").isString().notEmpty(),
   validateRequest,
 ];
 
 const unitValidation = [
-  body('code').isString().notEmpty(),
-  body('name').isString().notEmpty(),
-  body('programId').isString().notEmpty(),
-  body('semester').isInt({ min: 1 }),
+  body("code").isString().notEmpty(),
+  body("name").isString().notEmpty(),
+  body("programId").isString().notEmpty(),
+  body("semester").isInt({ min: 1 }),
   validateRequest,
 ];
 
 const enrollmentValidation = [
-  body('studentId').isString().notEmpty(),
-  body('unitId').isString().notEmpty(),
-  body('semester').isInt({ min: 1 }),
+  body("studentId").isString().notEmpty(),
+  body("unitId").isString().notEmpty(),
+  body("semester").isInt({ min: 1 }),
   validateRequest,
 ];
 
+const unitIdValidation = [param("id").isString().notEmpty(), validateRequest];
+
 const gradeValidation = [
-  body('enrollmentId').isString().notEmpty(),
-  body('catScore').isFloat({ min: 0 }),
-  body('examScore').isFloat({ min: 0 }),
+  body("enrollmentId").isString().notEmpty(),
+  body("catScore").isFloat({ min: 0 }),
+  body("examScore").isFloat({ min: 0 }),
+  validateRequest,
+];
+
+const lecturerDocumentValidation = [
+  body("title").isString().notEmpty(),
+  body("description").optional().isString(),
+  validateRequest,
+];
+
+const chatRoomValidation = [
+  body("name").isString().notEmpty(),
+  body("unitId").optional().isString(),
+  validateRequest,
+];
+
+const chatMessageValidation = [
+  body("content").isString().notEmpty().isLength({ max: 1000 }),
+  validateRequest,
+];
+
+const roomIdValidation = [
+  param("roomId").isString().notEmpty(),
   validateRequest,
 ];
 
@@ -107,10 +131,91 @@ async function recordGrade(req, res, next) {
   }
 }
 
+async function getUnitEnrollments(req, res, next) {
+  try {
+    const enrollments = await academicService.getUnitEnrollments(req.params.id);
+    res.json({ enrollments });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getDepartmentOverview(req, res, next) {
   try {
     const overview = await academicService.getDepartmentOverview(req.params.id);
     res.json({ overview });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function createLecturerDocument(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const lecturer = await academicService.getLecturerByUserId(req.user.id);
+    if (!lecturer) {
+      return res.status(404).json({ message: "Lecturer profile not found" });
+    }
+
+    const document = await academicService.createLecturerDocument({
+      title: req.body.title,
+      description: req.body.description,
+      filePath: req.file.path,
+      lecturerId: lecturer.id,
+    });
+    res.status(201).json({ document });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listLecturerDocuments(req, res, next) {
+  try {
+    const documents = await academicService.listLecturerDocuments();
+    res.json({ documents });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function createChatRoom(req, res, next) {
+  try {
+    const room = await academicService.createChatRoom(req.body);
+    res.status(201).json({ room });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listChatRooms(req, res, next) {
+  try {
+    const rooms = await academicService.listChatRooms();
+    res.json({ rooms });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function createChatMessage(req, res, next) {
+  try {
+    const message = await academicService.createChatMessage({
+      roomId: req.params.roomId,
+      content: req.body.content,
+      userId: req.user.id,
+    });
+    res.status(201).json({ message });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getChatMessages(req, res, next) {
+  try {
+    const messages = await academicService.getChatMessages(req.params.roomId);
+    res.json({ messages });
   } catch (err) {
     next(err);
   }
@@ -125,11 +230,22 @@ module.exports = {
   listUnits,
   enrollStudent,
   recordGrade,
+  getUnitEnrollments,
   departmentValidation,
   programValidation,
   unitValidation,
   enrollmentValidation,
+  unitIdValidation,
   gradeValidation,
   getDepartmentOverview,
+  createLecturerDocument,
+  listLecturerDocuments,
+  createChatRoom,
+  listChatRooms,
+  createChatMessage,
+  getChatMessages,
+  lecturerDocumentValidation,
+  chatRoomValidation,
+  chatMessageValidation,
+  roomIdValidation,
 };
-

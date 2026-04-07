@@ -28,6 +28,7 @@ model User {
   student   Student?
   lecturer  Lecturer?
   auditLogs AuditLog[]
+  chatMessages ChatMessage[]
 }
 
 model Department {
@@ -71,6 +72,7 @@ model Lecturer {
 
   user        User       @relation(fields: [userId], references: [id])
   department  Department @relation(fields: [departmentId], references: [id])
+  documents   LecturerDocument[]
 }
 
 model Unit {
@@ -82,6 +84,7 @@ model Unit {
 
   program     Program     @relation(fields: [programId], references: [id])
   enrollments Enrollment[]
+  chatRooms   ChatRoom[]
 }
 
 model Enrollment {
@@ -151,4 +154,37 @@ model AuditLog {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model LecturerDocument {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  filePath    String
+  lecturerId  String
+  createdAt   DateTime @default(now())
+
+  lecturer Lecturer @relation(fields: [lecturerId], references: [id])
+}
+
+model ChatRoom {
+  id        String   @id @default(uuid())
+  name      String
+  unitId    String?
+  createdAt DateTime @default(now())
+
+  unit     Unit?         @relation(fields: [unitId], references: [id])
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  roomId    String
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
+}
+
 

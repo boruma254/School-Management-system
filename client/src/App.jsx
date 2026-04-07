@@ -1,36 +1,40 @@
-import React from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
+import React from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import AdminDashboard from './pages/AdminDashboard';
-import StudentDashboard from './pages/StudentDashboard';
-import LecturerDashboard from './pages/LecturerDashboard';
-import FinanceDashboard from './pages/FinanceDashboard';
-import StudentManagementPage from './pages/StudentManagementPage';
-import AcademicManagementPage from './pages/AcademicManagementPage';
-import PaymentsPage from './pages/PaymentsPage';
-import ReportsPage from './pages/ReportsPage';
-import SignupPage from './pages/SignupPage';
-import StudentDocumentsPage from './pages/StudentDocumentsPage';
-import StudentProfilePage from './pages/StudentProfilePage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import ResourcesPage from './pages/ResourcesPage';
-import PublicationsPage from './pages/PublicationsPage';
-import NewsletterPage from './pages/NewsletterPage';
-import FaqPage from './pages/FaqPage';
+import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
+import LecturerDashboard from "./pages/LecturerDashboard";
+import FinanceDashboard from "./pages/FinanceDashboard";
+import StudentManagementPage from "./pages/StudentManagementPage";
+import AcademicManagementPage from "./pages/AcademicManagementPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import ReportsPage from "./pages/ReportsPage";
+import SignupPage from "./pages/SignupPage";
+import StudentDocumentsPage from "./pages/StudentDocumentsPage";
+import StudentProfilePage from "./pages/StudentProfilePage";
+import ChatPortalPage from "./pages/ChatPortalPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import ResourcesPage from "./pages/ResourcesPage";
+import PublicationsPage from "./pages/PublicationsPage";
+import NewsletterPage from "./pages/NewsletterPage";
+import FaqPage from "./pages/FaqPage";
 
 function RootRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/landing" replace />;
-  if (user.role === 'ADMIN') return <Navigate to="/dashboard/admin" replace />;
-  if (user.role === 'STUDENT') return <Navigate to="/dashboard/student" replace />;
-  if (user.role === 'LECTURER') return <Navigate to="/dashboard/lecturer" replace />;
-  if (user.role === 'FINANCE') return <Navigate to="/dashboard/finance" replace />;
+  if (user.role === "ADMIN") return <Navigate to="/dashboard/admin" replace />;
+  if (user.role === "STUDENT")
+    return <Navigate to="/dashboard/student" replace />;
+  if (user.role === "LECTURER")
+    return <Navigate to="/dashboard/lecturer" replace />;
+  if (user.role === "FINANCE")
+    return <Navigate to="/dashboard/finance" replace />;
   return <Navigate to="/landing" replace />;
 }
 
@@ -66,7 +70,7 @@ export default function App() {
         <Route
           path="admin"
           element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
               <AdminDashboard />
             </ProtectedRoute>
           }
@@ -74,7 +78,7 @@ export default function App() {
         <Route
           path="student"
           element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
               <StudentDashboard />
             </ProtectedRoute>
           }
@@ -82,7 +86,7 @@ export default function App() {
         <Route
           path="profile"
           element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
               <StudentProfilePage />
             </ProtectedRoute>
           }
@@ -90,15 +94,23 @@ export default function App() {
         <Route
           path="documents"
           element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
               <StudentDocumentsPage />
             </ProtectedRoute>
           }
-        />
+        />{" "}
+        <Route
+          path="chat"
+          element={
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
+              <ChatPortalPage />
+            </ProtectedRoute>
+          }
+        />{" "}
         <Route
           path="lecturer"
           element={
-            <ProtectedRoute allowedRoles={['LECTURER']}>
+            <ProtectedRoute allowedRoles={["LECTURER"]}>
               <LecturerDashboard />
             </ProtectedRoute>
           }
@@ -106,7 +118,7 @@ export default function App() {
         <Route
           path="finance"
           element={
-            <ProtectedRoute allowedRoles={['FINANCE', 'ADMIN']}>
+            <ProtectedRoute allowedRoles={["FINANCE", "ADMIN"]}>
               <FinanceDashboard />
             </ProtectedRoute>
           }
@@ -114,7 +126,7 @@ export default function App() {
         <Route
           path="students"
           element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
               <StudentManagementPage />
             </ProtectedRoute>
           }
@@ -122,7 +134,7 @@ export default function App() {
         <Route
           path="academic"
           element={
-            <ProtectedRoute allowedRoles={['ADMIN', 'LECTURER']}>
+            <ProtectedRoute allowedRoles={["ADMIN", "LECTURER"]}>
               <AcademicManagementPage />
             </ProtectedRoute>
           }
@@ -130,7 +142,7 @@ export default function App() {
         <Route
           path="payments"
           element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
               <PaymentsPage />
             </ProtectedRoute>
           }
@@ -138,7 +150,7 @@ export default function App() {
         <Route
           path="reports"
           element={
-            <ProtectedRoute allowedRoles={['ADMIN', 'FINANCE']}>
+            <ProtectedRoute allowedRoles={["ADMIN", "FINANCE"]}>
               <ReportsPage />
             </ProtectedRoute>
           }
@@ -150,4 +162,3 @@ export default function App() {
     </Routes>
   );
 }
-

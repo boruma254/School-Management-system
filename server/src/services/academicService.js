@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma');
+const prisma = require("../config/prisma");
 
 async function createDepartment(name) {
   return prisma.department.create({ data: { name } });
@@ -50,6 +50,29 @@ async function listUnits() {
   });
 }
 
+async function getUnitEnrollments(unitId) {
+  return prisma.enrollment.findMany({
+    where: { unitId },
+    include: {
+      student: {
+        include: {
+          user: true,
+          program: true,
+        },
+      },
+      unit: true,
+      grade: true,
+    },
+    orderBy: {
+      student: {
+        user: {
+          fullName: "asc",
+        },
+      },
+    },
+  });
+}
+
 async function enrollStudent(data) {
   const enrollment = await prisma.enrollment.create({
     data: {
@@ -63,11 +86,11 @@ async function enrollStudent(data) {
 
 async function recordGrade(data) {
   const totalScore = data.catScore + data.examScore;
-  let gradeLetter = 'F';
-  if (totalScore >= 80) gradeLetter = 'A';
-  else if (totalScore >= 70) gradeLetter = 'B';
-  else if (totalScore >= 60) gradeLetter = 'C';
-  else if (totalScore >= 50) gradeLetter = 'D';
+  let gradeLetter = "F";
+  if (totalScore >= 80) gradeLetter = "A";
+  else if (totalScore >= 70) gradeLetter = "B";
+  else if (totalScore >= 60) gradeLetter = "C";
+  else if (totalScore >= 50) gradeLetter = "D";
 
   const grade = await prisma.grade.upsert({
     where: { enrollmentId: data.enrollmentId },
@@ -119,7 +142,7 @@ async function getDepartmentOverview(departmentId) {
   });
 
   if (!department) {
-    const err = new Error('Department not found');
+    const err = new Error("Department not found");
     err.statusCode = 404;
     throw err;
   }
@@ -174,6 +197,107 @@ async function getDepartmentOverview(departmentId) {
   };
 }
 
+async function createLecturerDocument(data) {
+  return prisma.lecturerDocument.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      filePath: data.filePath,
+      lecturerId: data.lecturerId,
+    },
+    include: {
+      lecturer: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+}
+
+async function listLecturerDocuments() {
+  return prisma.lecturerDocument.findMany({
+    include: {
+      lecturer: {
+        include: {
+          user: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+async function getLecturerByUserId(userId) {
+  return prisma.lecturer.findUnique({
+    where: { userId },
+  });
+}
+
+async function createChatRoom(data) {
+  return prisma.chatRoom.create({
+    data: {
+      name: data.name,
+      unitId: data.unitId,
+    },
+  });
+}
+
+async function listChatRooms() {
+  return prisma.chatRoom.findMany({
+    include: {
+      unit: true,
+      messages: {
+        include: {
+          user: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+        take: 1, // Just get the latest message for preview
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+async function createChatMessage(data) {
+  return prisma.chatMessage.create({
+    data: {
+      roomId: data.roomId,
+      userId: data.userId,
+      message: data.content,
+    },
+    include: {
+      user: true,
+      room: true,
+    },
+  });
+}
+
+async function getChatMessages(roomId, limit = 50) {
+  return prisma.chatMessage.findMany({
+    where: { roomId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    take: limit,
+  });
+}
+
 module.exports = {
   createDepartment,
   listDepartments,
@@ -181,8 +305,15 @@ module.exports = {
   listPrograms,
   createUnit,
   listUnits,
+  getUnitEnrollments,
   enrollStudent,
   recordGrade,
   getDepartmentOverview,
+  createLecturerDocument,
+  listLecturerDocuments,
+  getLecturerByUserId,
+  createChatRoom,
+  listChatRooms,
+  createChatMessage,
+  getChatMessages,
 };
-
