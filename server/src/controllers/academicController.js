@@ -1,6 +1,7 @@
 const { body, param } = require("express-validator");
 const validateRequest = require("../middleware/validateRequest");
 const academicService = require("../services/academicService");
+const notificationService = require("../services/notificationService");
 
 const departmentValidation = [
   body("name").isString().notEmpty(),
@@ -183,7 +184,21 @@ async function listLecturerDocuments(req, res, next) {
 
 async function createChatRoom(req, res, next) {
   try {
+    const lecturer = await academicService.getLecturerByUserId(req.user.id);
+    if (!lecturer) {
+      return res.status(404).json({ message: "Lecturer profile not found" });
+    }
+
     const room = await academicService.createChatRoom(req.body);
+
+    // Send notifications to all students
+    await notificationService.createNotificationsForAllStudents({
+      title: `New Chat Room: ${room.name}`,
+      message: `A new chat room "${room.name}" has been created. Join the discussion!`,
+      type: "chat_announcement",
+      lecturerId: lecturer.id,
+    });
+
     res.status(201).json({ room });
   } catch (err) {
     next(err);

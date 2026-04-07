@@ -236,6 +236,12 @@ async function getLecturerByUserId(userId) {
   });
 }
 
+async function getStudentByUserId(userId) {
+  return prisma.student.findUnique({
+    where: { userId },
+  });
+}
+
 async function createChatRoom(data) {
   return prisma.chatRoom.create({
     data: {
@@ -312,6 +318,7 @@ module.exports = {
   createLecturerDocument,
   listLecturerDocuments,
   getLecturerByUserId,
+  getStudentByUserId,
   createChatRoom,
   listChatRooms,
   createChatMessage,

@@ -1,14 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import React, { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+import NotificationsPanel from "../components/NotificationsPanel";
 
 function gradeToPoints(letter) {
   if (!letter) return 0;
   const g = String(letter).toUpperCase();
-  if (g === 'A') return 4;
-  if (g === 'B') return 3;
-  if (g === 'C') return 2;
-  if (g === 'D') return 1;
+  if (g === "A") return 4;
+  if (g === "B") return 3;
+  if (g === "C") return 2;
+  if (g === "D") return 1;
   return 0;
 }
 
@@ -26,8 +27,8 @@ export default function StudentDashboard() {
     setLoading(true);
 
     Promise.all([
-      api.get('/students/me'),
-      api.get('/finance/students/me/fee-summary'),
+      api.get("/students/me"),
+      api.get("/finance/students/me/fee-summary"),
     ])
       .then(([studentRes, feeRes]) => {
         if (!isMounted) return;
@@ -49,15 +50,13 @@ export default function StudentDashboard() {
   const enrollments = student?.enrollments || [];
 
   const gpa = useMemo(() => {
-    const graded = enrollments
-      .map((e) => e.grade)
-      .filter((g) => g && g.grade);
+    const graded = enrollments.map((e) => e.grade).filter((g) => g && g.grade);
 
     if (!graded.length) return null;
 
     const totalPoints = graded.reduce(
       (sum, g) => sum + gradeToPoints(g.grade),
-      0
+      0,
     );
     return totalPoints / graded.length;
   }, [enrollments]);
@@ -90,13 +89,16 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="mb-1 text-2xl font-semibold text-slate-900">
-          Student Portal
-        </h1>
-        <p className="text-sm text-slate-600">
-          Welcome, {user?.fullName || 'Student'}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 text-2xl font-semibold text-slate-900">
+            Student Portal
+          </h1>
+          <p className="text-sm text-slate-600">
+            Welcome, {user?.fullName || "Student"}
+          </p>
+        </div>
+        <NotificationsPanel />
       </div>
 
       {loading ? (
@@ -112,7 +114,7 @@ export default function StudentDashboard() {
                   Admission Number
                 </div>
                 <div className="mt-2 text-lg font-semibold text-slate-900">
-                  {student?.admissionNumber || '-'}
+                  {student?.admissionNumber || "-"}
                 </div>
               </div>
               <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -120,7 +122,7 @@ export default function StudentDashboard() {
                   Current Semester
                 </div>
                 <div className="mt-2 text-lg font-semibold text-slate-900">
-                  {quickStats.semester || '-'}
+                  {quickStats.semester || "-"}
                 </div>
               </div>
               <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -155,7 +157,7 @@ export default function StudentDashboard() {
                   GPA / Results Summary
                 </div>
                 <div className="mt-2 text-lg font-semibold text-slate-900">
-                  {gpa === null ? '-' : gpa.toFixed(2)}
+                  {gpa === null ? "-" : gpa.toFixed(2)}
                 </div>
               </div>
             </div>
@@ -179,9 +181,7 @@ export default function StudentDashboard() {
                         <span className="font-medium">
                           {r.unitCode} - {r.unitName}
                         </span>
-                        <span className="text-slate-500">
-                          Sem {r.semester}
-                        </span>
+                        <span className="text-slate-500">Sem {r.semester}</span>
                       </li>
                     ))}
                   </ul>
@@ -209,7 +209,8 @@ export default function StudentDashboard() {
                 Lecturer Assigned / Notes
               </div>
               <div className="mt-1 text-sm text-slate-600">
-                Unit-to-lecturer assignment and notes download are not modeled in the current backend.
+                Unit-to-lecturer assignment and notes download are not modeled
+                in the current backend.
               </div>
             </div>
           </section>
@@ -263,25 +264,30 @@ export default function StudentDashboard() {
                           <div className="font-medium text-slate-900">
                             {r.unitCode}
                           </div>
-                          <div className="text-xs text-slate-500">{r.unitName}</div>
+                          <div className="text-xs text-slate-500">
+                            {r.unitName}
+                          </div>
                         </td>
                         <td className="px-4 py-2">
-                          {r.catScore === undefined ? '-' : r.catScore}
+                          {r.catScore === undefined ? "-" : r.catScore}
                         </td>
                         <td className="px-4 py-2">
-                          {r.examScore === undefined ? '-' : r.examScore}
+                          {r.examScore === undefined ? "-" : r.examScore}
                         </td>
                         <td className="px-4 py-2">
-                          {r.totalScore === undefined ? '-' : r.totalScore}
+                          {r.totalScore === undefined ? "-" : r.totalScore}
                         </td>
                         <td className="px-4 py-2 font-semibold">
-                          {r.gradeLetter || 'Pending'}
+                          {r.gradeLetter || "Pending"}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="px-4 py-6 text-center text-sm text-slate-500" colSpan={5}>
+                      <td
+                        className="px-4 py-6 text-center text-sm text-slate-500"
+                        colSpan={5}
+                      >
                         No results yet.
                       </td>
                     </tr>
@@ -299,7 +305,8 @@ export default function StudentDashboard() {
                   Fees & Payments
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Fee structure, balance, payment history, and M-Pesa (STK Push).
+                  Fee structure, balance, payment history, and M-Pesa (STK
+                  Push).
                 </p>
               </div>
               <a
@@ -323,7 +330,7 @@ export default function StudentDashboard() {
                         className="flex items-center justify-between border-b pb-2 last:border-b-0"
                       >
                         <span className="font-medium">
-                          {fs.program?.name || 'Program'}
+                          {fs.program?.name || "Program"}
                         </span>
                         <span className="text-slate-500">
                           KES {Number(fs.amount).toLocaleString()}
@@ -363,7 +370,8 @@ export default function StudentDashboard() {
                   </div>
                 </div>
                 <div className="mt-3 rounded-md bg-slate-50 p-3 text-xs text-slate-500">
-                  Receipt downloads are available from the backend once M-Pesa payments are initiated.
+                  Receipt downloads are available from the backend once M-Pesa
+                  payments are initiated.
                 </div>
               </div>
             </div>
@@ -394,7 +402,9 @@ export default function StudentDashboard() {
                     payments.map((p) => (
                       <tr key={p.id}>
                         <td className="px-4 py-2">
-                          {p.createdAt ? new Date(p.createdAt).toLocaleString() : '-'}
+                          {p.createdAt
+                            ? new Date(p.createdAt).toLocaleString()
+                            : "-"}
                         </td>
                         <td className="px-4 py-2">
                           KES {Number(p.amount).toLocaleString()}
@@ -427,7 +437,8 @@ export default function StudentDashboard() {
                   Biometric Attendance
                 </div>
                 <div className="mt-1 text-sm text-slate-600">
-                  Biometric sync and attendance logs are not implemented in the backend yet.
+                  Biometric sync and attendance logs are not implemented in the
+                  backend yet.
                 </div>
               </div>
               <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -435,7 +446,8 @@ export default function StudentDashboard() {
                   Missed Classes Alerts
                 </div>
                 <div className="mt-1 text-sm text-slate-600">
-                  Attendance-based alerts will appear once attendance data is connected.
+                  Attendance-based alerts will appear once attendance data is
+                  connected.
                 </div>
               </div>
             </div>
@@ -443,7 +455,9 @@ export default function StudentDashboard() {
 
           {/* Announcements */}
           <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">Announcements</h2>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Announcements
+            </h2>
             <div className="rounded-xl bg-white p-4 shadow-sm">
               <div className="text-sm font-semibold text-slate-800">
                 School Notices / Department Updates
@@ -494,7 +508,9 @@ export default function StudentDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Admission</span>
-                    <span className="font-medium">{student?.admissionNumber}</span>
+                    <span className="font-medium">
+                      {student?.admissionNumber}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -505,15 +521,19 @@ export default function StudentDashboard() {
                 <div className="mt-3 space-y-2 text-sm text-slate-700">
                   <div className="flex items-center justify-between">
                     <span>Program</span>
-                    <span className="font-medium">{student?.program?.name}</span>
+                    <span className="font-medium">
+                      {student?.program?.name}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Department</span>
-                    <span className="font-medium">{student?.department?.name || '-'}</span>
+                    <span className="font-medium">
+                      {student?.department?.name || "-"}
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4 rounded-md bg-slate-50 p-3 text-xs text-slate-500">
-                  For contact updates (phone/email) and password changes, open{' '}
+                  For contact updates (phone/email) and password changes, open{" "}
                   <a
                     className="font-medium text-slate-900 underline"
                     href="/profile"
@@ -530,4 +550,3 @@ export default function StudentDashboard() {
     </div>
   );
 }
-

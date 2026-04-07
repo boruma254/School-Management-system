@@ -88,7 +88,7 @@ export default function ChatPortalPage() {
     <div className="space-y-6">
       <div>
         <h1 className="mb-1 text-2xl font-semibold text-slate-900">
-          Student Chat Portal
+          Student Chat
         </h1>
         <p className="text-sm text-slate-600">
           Discuss class matters with fellow students
