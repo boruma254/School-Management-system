@@ -13,6 +13,7 @@ const navItemsByRole = {
   LECTURER: [
     { to: "/dashboard/lecturer", label: "Dashboard" },
     { to: "/dashboard/academic", label: "Academic" },
+    { to: "/dashboard/chat", label: "Chat Rooms" },
   ],
   STUDENT: [
     { to: "/dashboard/student", label: "Dashboard" },

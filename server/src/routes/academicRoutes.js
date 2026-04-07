@@ -102,17 +102,17 @@ router.post(
   chatRoomValidation,
   createChatRoom,
 );
-router.get("/chat/rooms", authorizeRoles("STUDENT"), listChatRooms);
+router.get("/chat/rooms", authorizeRoles("STUDENT", "LECTURER"), listChatRooms);
 router.post(
   "/chat/rooms/:roomId/messages",
-  authorizeRoles("STUDENT"),
+  authorizeRoles("STUDENT", "LECTURER"),
   roomIdValidation,
   chatMessageValidation,
   createChatMessage,
 );
 router.get(
   "/chat/rooms/:roomId/messages",
-  authorizeRoles("STUDENT"),
+  authorizeRoles("STUDENT", "LECTURER"),
   roomIdValidation,
   getChatMessages,
 );

@@ -102,7 +102,7 @@ export default function App() {
         <Route
           path="chat"
           element={
-            <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <ProtectedRoute allowedRoles={["STUDENT", "LECTURER"]}>
               <ChatPortalPage />
             </ProtectedRoute>
           }
