@@ -3,11 +3,13 @@
 Full-stack institutional ERP for managing students, academics, finance, and dashboards.
 
 ### Tech Stack
+
 - **Backend**: Node.js, Express, Prisma, PostgreSQL, JWT, bcrypt
 - **Frontend**: React (Vite), Tailwind CSS, Axios, React Router, Context API, PWA
 - **Architecture**: REST API, clean layered architecture (controllers, services, routes, middleware)
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker & Docker Compose
 
@@ -39,6 +41,7 @@ cp .env.example .env
 ```
 
 Key variables:
+
 - `DATABASE_URL` – PostgreSQL connection string
 - `JWT_SECRET`, `JWT_REFRESH_SECRET` – secrets for JWT tokens
 - `MPESA_*` – M-Pesa Daraja sandbox configuration
@@ -52,8 +55,19 @@ npm run seed
 ```
 
 This creates a default admin user:
+
 - **Email**: `admin@kisitvet.local`
 - **Password**: `Admin@12345`
+
+#### Test Accounts
+
+The seed script creates 50 test students plus additional demo accounts for testing. **⚠️ SECURITY WARNING: These are development-only credentials. Never use in production!**
+
+- **Admin**: `admin@kisitvet.local` / `Admin@12345`
+- **Lecturer**: `lecturer@kisitvet.local` / `Lecturer@12345`
+- **Student**: `student@kisitvet.local` / `Student@12345`
+- **Finance Officer**: `finance@kisitvet.local` / `Finance@12345`
+- **Demo Students**: `student001@kisitvet.local` through `student050@kisitvet.local` (all with password `Student@12345`)
 
 ### 3. Frontend Setup (`client/`)
 
@@ -79,4 +93,3 @@ The frontend will start on `http://localhost:5173` (Vite default).
 - **Academic Module**: units, grades, semesters
 - **Finance**: fee structures, payments, M-Pesa STK Push integration (sandbox), receipts
 - **Admin Dashboard**: statistics endpoints for students and revenue
-
