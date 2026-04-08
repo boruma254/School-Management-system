@@ -273,9 +273,35 @@ async function uploadAttendance(req, res, next) {
       return res.status(404).json({ message: "Lecturer profile not found" });
     }
 
+    const attendanceData = req.body.attendanceData;
+    if (!Array.isArray(attendanceData) || !attendanceData.length) {
+      return res
+        .status(400)
+        .json({ message: "attendanceData must be a non-empty array." });
+    }
+
+    const invalidRows = attendanceData
+      .map((record, index) => {
+        if (!record || !record.studentId) {
+          return `Row ${index + 1} is missing studentId.`;
+        }
+        if (!record.status) {
+          return `Row ${index + 1} is missing status.`;
+        }
+        if (!record.date || Number.isNaN(new Date(record.date).getTime())) {
+          return `Row ${index + 1} has invalid date.`;
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    if (invalidRows.length) {
+      return res.status(400).json({ message: invalidRows.join(" ") });
+    }
+
     const attendance = await academicService.uploadAttendance({
       lecturerId: lecturer.id,
-      attendanceData: req.body.attendanceData, // Array of {studentId, status, date}
+      attendanceData,
     });
     res.status(201).json({ attendance });
   } catch (err) {

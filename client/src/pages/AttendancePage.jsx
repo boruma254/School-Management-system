@@ -41,27 +41,61 @@ export default function AttendancePage() {
     setSuccessMessage("");
 
     try {
+      const normalizeHeader = (header) =>
+        header
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+
       // Parse CSV file to extract attendance data
       const text = await csvFile.text();
-      const lines = text.split("\n");
-      const headers = lines[0].split(",").map((h) => h.trim());
+      const lines = text.split(/\r?\n/);
+      const headers = lines[0].split(",").map((h) => normalizeHeader(h));
+
+      if (!headers.length || !headers.some((h) => h.includes("student"))) {
+        throw new Error(
+          "CSV must include a studentId column (e.g. studentId or student_id)",
+        );
+      }
 
       const attendanceData = [];
       for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
+        const line = lines[i].trim();
+        if (!line) continue;
 
-        const values = lines[i].split(",").map((v) => v.trim());
+        const values = line.split(",").map((v) => v.trim());
         const record = {};
 
         headers.forEach((header, idx) => {
-          record[header.toLowerCase()] = values[idx];
+          record[header] = values[idx];
         });
 
+        const studentId =
+          record.studentid || record.student_id || record.student;
+        const rawStatus = (record.status || "PRESENT").toUpperCase();
+        const dateValue = record.date || new Date().toISOString().split("T")[0];
+
+        if (!studentId) {
+          throw new Error(`Invalid CSV row ${i}: missing studentId value.`);
+        }
+
+        const status = ["PRESENT", "ABSENT", "LATE"].includes(rawStatus)
+          ? rawStatus
+          : "PRESENT";
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) {
+          throw new Error(`Invalid date value on row ${i}: ${dateValue}`);
+        }
+
         attendanceData.push({
-          studentId: record.studentid,
-          status: record.status || "PRESENT",
-          date: record.date || new Date().toISOString().split("T")[0],
+          studentId,
+          status,
+          date: date.toISOString(),
         });
+      }
+
+      if (!attendanceData.length) {
+        throw new Error("No attendance records found in the uploaded CSV.");
       }
 
       await api.post("/academic/attendance/upload", {
@@ -74,7 +108,9 @@ export default function AttendancePage() {
     } catch (err) {
       console.error(err);
       setError(
-        err.response?.data?.message || "Failed to upload attendance records.",
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to upload attendance records.",
       );
     } finally {
       setUploading(false);
