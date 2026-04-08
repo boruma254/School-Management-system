@@ -237,9 +237,6 @@ export default function ChatPortalPage() {
                   <h2 className="text-lg font-semibold text-slate-900">
                     {selectedRoom.name}
                   </h2>
-                  <p className="text-sm text-slate-600">
-                    {selectedRoom.description}
-                  </p>
                 </div>
 
                 <div className="min-h-[40vh] max-h-[65vh] overflow-y-auto p-4 space-y-4 md:h-96">
@@ -267,7 +264,7 @@ export default function ChatPortalPage() {
                           <div className="font-medium text-xs mb-1">
                             {message.user?.fullName || "Unknown"}
                           </div>
-                          <div>{message.content}</div>
+                          <div>{message.message}</div>
                           <div className="text-xs opacity-75 mt-1">
                             {new Date(message.createdAt).toLocaleString()}
                           </div>

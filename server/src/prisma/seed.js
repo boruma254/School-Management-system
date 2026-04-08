@@ -1,20 +1,20 @@
-require('dotenv').config();
-const bcrypt = require('bcrypt');
-const { PrismaClient } = require('@prisma/client');
+require("dotenv").config();
+const bcrypt = require("bcrypt");
+const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
 function computeGradeLetter(catScore, examScore) {
   const totalScore = catScore + examScore;
-  if (totalScore >= 80) return 'A';
-  if (totalScore >= 70) return 'B';
-  if (totalScore >= 60) return 'C';
-  if (totalScore >= 50) return 'D';
-  return 'F';
+  if (totalScore >= 80) return "A";
+  if (totalScore >= 70) return "B";
+  if (totalScore >= 60) return "C";
+  if (totalScore >= 50) return "D";
+  return "F";
 }
 
 function padNumber(n, width = 4) {
-  return String(n).padStart(width, '0');
+  return String(n).padStart(width, "0");
 }
 
 function randInt(min, max) {
@@ -23,8 +23,8 @@ function randInt(min, max) {
 
 async function main() {
   // Shared demo dataset (used by portals)
-  const departmentName = 'School of Computer Science';
-  const programName = 'BSc Information Technology';
+  const departmentName = "School of Computer Science";
+  const programName = "BSc Information Technology";
   const semester = 1;
 
   // Create academic structure
@@ -44,8 +44,8 @@ async function main() {
   }
 
   const unitsSeed = [
-    { code: 'CS101', name: 'Introduction to Programming', semester },
-    { code: 'CS102', name: 'Data Structures', semester },
+    { code: "CS101", name: "Introduction to Programming", semester },
+    { code: "CS102", name: "Data Structures", semester },
   ];
 
   const units = [];
@@ -84,32 +84,32 @@ async function main() {
 
   const roles = [
     {
-      email: 'admin@kisitvet.local',
-      fullName: 'System Administrator',
-      password: 'Admin@12345',
-      role: 'ADMIN',
-      phoneNumber: '0712340001',
+      email: "admin@kisitvet.local",
+      fullName: "System Administrator",
+      password: "Admin@12345",
+      role: "ADMIN",
+      phoneNumber: "0712340001",
     },
     {
-      email: 'lecturer@kisitvet.local',
-      fullName: 'Lecturer One',
-      password: 'Lecturer@12345',
-      role: 'LECTURER',
-      phoneNumber: '0712340002',
+      email: "lecturer@kisitvet.local",
+      fullName: "Lecturer One",
+      password: "Lecturer@12345",
+      role: "LECTURER",
+      phoneNumber: "0712340002",
     },
     {
-      email: 'student@kisitvet.local',
-      fullName: 'Student One',
-      password: 'Student@12345',
-      role: 'STUDENT',
-      phoneNumber: '0712340003',
+      email: "student@kisitvet.local",
+      fullName: "Student One",
+      password: "Student@12345",
+      role: "STUDENT",
+      phoneNumber: "0712340003",
     },
     {
-      email: 'finance@kisitvet.local',
-      fullName: 'Finance Officer',
-      password: 'Finance@12345',
-      role: 'FINANCE',
-      phoneNumber: '0712340004',
+      email: "finance@kisitvet.local",
+      fullName: "Finance Officer",
+      password: "Finance@12345",
+      role: "FINANCE",
+      phoneNumber: "0712340004",
     },
   ];
 
@@ -140,7 +140,7 @@ async function main() {
   }
 
   // Lecturer profile
-  const lecturerUser = usersByRole['LECTURER'];
+  const lecturerUser = usersByRole["LECTURER"];
   if (lecturerUser) {
     const existingLecturer = await prisma.lecturer.findUnique({
       where: { userId: lecturerUser.id },
@@ -156,9 +156,9 @@ async function main() {
   }
 
   // Student profile, enrollments, grades, payments
-  const studentUser = usersByRole['STUDENT'];
+  const studentUser = usersByRole["STUDENT"];
   if (studentUser) {
-    const admissionNumber = 'ADM-1001';
+    const admissionNumber = "ADM-1001";
     let student = await prisma.student.findUnique({
       where: { admissionNumber },
     });
@@ -170,7 +170,7 @@ async function main() {
           userId: studentUser.id,
           programId: program.id,
           currentSemester: semester,
-          status: 'ACTIVE',
+          status: "ACTIVE",
           departmentId: department.id,
         },
       });
@@ -181,7 +181,7 @@ async function main() {
           userId: studentUser.id,
           programId: program.id,
           currentSemester: semester,
-          status: 'ACTIVE',
+          status: "ACTIVE",
           departmentId: department.id,
         },
       });
@@ -191,13 +191,13 @@ async function main() {
     const enrollmentSeed = [
       // CS101
       {
-        unitCode: 'CS101',
+        unitCode: "CS101",
         catScore: 25,
         examScore: 60,
       },
       // CS102
       {
-        unitCode: 'CS102',
+        unitCode: "CS102",
         catScore: 30,
         examScore: 45,
       },
@@ -248,7 +248,7 @@ async function main() {
     }
 
     // Ensure at least one successful payment
-    const transactionRef = 'TXN-STU-001';
+    const transactionRef = "TXN-STU-001";
     const existingPayment = await prisma.payment.findFirst({
       where: { transactionRef },
     });
@@ -257,58 +257,103 @@ async function main() {
         data: {
           studentId: student.id,
           amount: 20000,
-          method: 'MPESA',
+          method: "MPESA",
           transactionRef,
-          status: 'SUCCESS',
+          status: "SUCCESS",
         },
       });
+    }
+
+    // Create a test chat room if none exist
+    const existingRoom = await prisma.chatRoom.findFirst({});
+    if (!existingRoom && lecturerUser) {
+      const room = await prisma.chatRoom.create({
+        data: {
+          name: "Introduction to Programming Discussion",
+        },
+      });
+
+      // Create test notifications for all students about the new chat room
+      const allStudents = await prisma.student.findMany({
+        take: 5,
+      });
+
+      const lecturer = await prisma.lecturer.findUnique({
+        where: { userId: lecturerUser.id },
+      });
+
+      for (const s of allStudents) {
+        await prisma.notification.create({
+          data: {
+            title: `New Chat Room: ${room.name}`,
+            message: `A new chat room has been created: "${room.name}". Join the discussion!`,
+            type: "chat_announcement",
+            studentId: s.id,
+            lecturerId: lecturer?.id,
+          },
+        });
+      }
+
+      // Create test chat messages
+      await prisma.chatMessage.create({
+        data: {
+          message:
+            "Welcome to this discussion room! Feel free to share your thoughts.",
+          userId: lecturerUser.id,
+          roomId: room.id,
+        },
+      });
+
+      console.log(
+        "Created test chat room with notifications and sample message",
+      );
     }
   }
 
   // Bulk demo students (for testing dashboards & CRUD flows)
   const firstNames = [
-    'Amina',
-    'Brian',
-    'Cynthia',
-    'Dennis',
-    'Esther',
-    'Faith',
-    'George',
-    'Hassan',
-    'Ivy',
-    'James',
-    'Kevin',
-    'Linda',
-    'Mary',
-    'Nancy',
-    'Oscar',
-    'Peter',
-    'Queen',
-    'Ruth',
-    'Samuel',
-    'Terry',
-    'Victor',
-    'Winnie',
-    'Yusuf',
-    'Zainab',
+    "Amina",
+    "Brian",
+    "Cynthia",
+    "Dennis",
+    "Esther",
+    "Faith",
+    "George",
+    "Hassan",
+    "Ivy",
+    "James",
+    "Kevin",
+    "Linda",
+    "Mary",
+    "Nancy",
+    "Oscar",
+    "Peter",
+    "Queen",
+    "Ruth",
+    "Samuel",
+    "Terry",
+    "Victor",
+    "Winnie",
+    "Yusuf",
+    "Zainab",
   ];
   const lastNames = [
-    'Omondi',
-    'Wanjiku',
-    'Mutiso',
-    'Kamau',
-    'Odhiambo',
-    'Chebet',
-    'Njoroge',
-    'Kiptoo',
-    'Wekesa',
-    'Mwangi',
-    'Achieng',
-    'Maina',
-    'Otieno',
-    'Mbugua',
-    'Barasa',
-    'Onyango',
+    "Omondi",
+    "Wanjiku",
+    "Mutiso",
+    "Kamau",
+    "Odhiambo",
+    "Chebet",
+    "Njoroge",
+    "Kiptoo",
+    "Wekesa",
+    "Mwangi",
+    "Achieng",
+    "Maina",
+    "Otieno",
+    "Mbugua",
+    "Barasa",
+    "Onyango",
   ];
 
   for (let i = 1; i <= 50; i += 1) {
@@ -322,13 +367,13 @@ async function main() {
 
     let user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      const passwordHash = await bcrypt.hash('Student@12345', 10);
+      const passwordHash = await bcrypt.hash("Student@12345", 10);
       user = await prisma.user.create({
         data: {
           fullName,
           email,
           password: passwordHash,
-          role: 'STUDENT',
+          role: "STUDENT",
           isActive: true,
           phoneNumber,
         },
@@ -351,7 +396,7 @@ async function main() {
           userId: user.id,
           programId: program.id,
           currentSemester: semester,
-          status: 'ACTIVE',
+          status: "ACTIVE",
           departmentId: department.id,
         },
       });
@@ -362,7 +407,7 @@ async function main() {
           userId: user.id,
           programId: program.id,
           currentSemester: semester,
-          status: 'ACTIVE',
+          status: "ACTIVE",
           departmentId: department.id,
         },
       });
@@ -422,32 +467,32 @@ async function main() {
         data: {
           studentId: student.id,
           amount,
-          method: i % 2 === 0 ? 'MPESA' : 'CASH',
+          method: i % 2 === 0 ? "MPESA" : "CASH",
           transactionRef,
-          status: 'SUCCESS',
+          status: "SUCCESS",
         },
       });
     }
   }
 
   // Pending student (for testing signup approval flow)
-  const pendingEmail = 'pendingstudent@kisitvet.local';
-  const pendingAdmissionNumber = 'ADM-PENDING-0001';
+  const pendingEmail = "pendingstudent@kisitvet.local";
+  const pendingAdmissionNumber = "ADM-PENDING-0001";
   const pendingCurrentSemester = semester;
 
   let pendingUser = await prisma.user.findUnique({
     where: { email: pendingEmail },
   });
   if (!pendingUser) {
-    const passwordHash = await bcrypt.hash('Pending@12345', 10);
+    const passwordHash = await bcrypt.hash("Pending@12345", 10);
     pendingUser = await prisma.user.create({
       data: {
-        fullName: 'Pending Student',
+        fullName: "Pending Student",
         email: pendingEmail,
         password: passwordHash,
-        role: 'STUDENT',
+        role: "STUDENT",
         isActive: false,
-        phoneNumber: '0712340999',
+        phoneNumber: "0712340999",
       },
     });
     console.log(`Created user: ${pendingEmail}`);
@@ -463,7 +508,7 @@ async function main() {
         userId: pendingUser.id,
         programId: program.id,
         currentSemester: pendingCurrentSemester,
-        status: 'PENDING',
+        status: "PENDING",
         departmentId: department.id,
       },
     });
@@ -474,13 +519,13 @@ async function main() {
         userId: pendingUser.id,
         programId: program.id,
         currentSemester: pendingCurrentSemester,
-        status: 'PENDING',
+        status: "PENDING",
         departmentId: department.id,
       },
     });
   }
 
-  console.log('Seed complete (demo dataset ready).');
+  console.log("Seed complete (demo dataset ready).");
 }
 
 main()
@@ -491,4 +536,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
