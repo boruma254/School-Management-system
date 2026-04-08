@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -30,6 +30,7 @@ const navItemsByRole = {
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const items = user ? navItemsByRole[user.role] || [] : [];
 
@@ -62,7 +63,20 @@ export default function Layout() {
         </aside>
         <div className="flex min-h-screen flex-1 flex-col">
           <header className="flex h-16 items-center justify-between border-b bg-white px-4">
-            <div className="md:hidden">
+            <div className="flex items-center gap-3 md:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen((value) => !value)}
+                aria-label={
+                  isMobileNavOpen
+                    ? "Close navigation menu"
+                    : "Open navigation menu"
+                }
+                aria-expanded={isMobileNavOpen}
+                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                {isMobileNavOpen ? "Close menu" : "Menu"}
+              </button>
               <Link to="/" className="font-semibold text-slate-900">
                 TVET ERP
               </Link>
@@ -85,6 +99,28 @@ export default function Layout() {
             </div>
           </header>
           <main className="p-4">
+            {isMobileNavOpen && (
+              <div className="mb-4 rounded-xl bg-white p-4 shadow-sm md:hidden">
+                <nav className="space-y-1">
+                  {items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setIsMobileNavOpen(false)}
+                      className={({ isActive }) =>
+                        `block rounded-md px-3 py-2 text-sm ${
+                          isActive
+                            ? "bg-slate-800 text-white"
+                            : "text-slate-700 hover:bg-slate-100"
+                        }`
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </nav>
+              </div>
+            )}
             <Outlet />
           </main>
         </div>

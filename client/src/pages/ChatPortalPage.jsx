@@ -12,6 +12,11 @@ export default function ChatPortalPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [error, setError] = useState("");
+  const [createRoomOpen, setCreateRoomOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState("");
+  const [newRoomDescription, setNewRoomDescription] = useState("");
+  const [creatingRoom, setCreatingRoom] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +34,7 @@ export default function ChatPortalPage() {
   }, [messages]);
 
   const loadChatRooms = async () => {
+    setError("");
     try {
       const res = await api.get("/academic/chat/rooms");
       setChatRooms(res.data.rooms || []);
@@ -37,7 +43,11 @@ export default function ChatPortalPage() {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to load chat rooms.");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to load chat rooms.",
+      );
     } finally {
       setLoadingRooms(false);
     }
@@ -72,9 +82,34 @@ export default function ChatPortalPage() {
       loadMessages(selectedRoomId);
     } catch (err) {
       console.error(err);
-      setError("Failed to send message.");
+      setError(err.response?.data?.message || "Failed to send message.");
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  const handleCreateRoom = async (e) => {
+    e.preventDefault();
+    if (!newRoomName.trim()) return;
+    setError("");
+    setSuccessMessage("");
+    setCreatingRoom(true);
+
+    try {
+      await api.post("/academic/chat/rooms", {
+        name: newRoomName.trim(),
+        description: newRoomDescription.trim(),
+      });
+      setNewRoomName("");
+      setNewRoomDescription("");
+      setCreateRoomOpen(false);
+      setSuccessMessage("Chat room created successfully.");
+      await loadChatRooms();
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to create chat room.");
+    } finally {
+      setCreatingRoom(false);
     }
   };
 
@@ -101,13 +136,71 @@ export default function ChatPortalPage() {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-3">
+      {successMessage && (
+        <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      )}
+
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
         {/* Chat Rooms Sidebar */}
         <div className="md:col-span-1">
           <div className="rounded-xl bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">
-              Chat Rooms
-            </h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Chat Rooms
+              </h2>
+              {user?.role === "LECTURER" && (
+                <button
+                  type="button"
+                  onClick={() => setCreateRoomOpen((open) => !open)}
+                  className="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800"
+                >
+                  {createRoomOpen ? "Close" : "Create"}
+                </button>
+              )}
+            </div>
+
+            {createRoomOpen && user?.role === "LECTURER" && (
+              <form
+                onSubmit={handleCreateRoom}
+                className="mb-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
+              >
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Room Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newRoomName}
+                    onChange={(e) => setNewRoomName(e.target.value)}
+                    required
+                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="e.g., Week 3 Discussion"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Description
+                  </label>
+                  <textarea
+                    value={newRoomDescription}
+                    onChange={(e) => setNewRoomDescription(e.target.value)}
+                    rows={2}
+                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    placeholder="Optional topic description"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={creatingRoom}
+                  className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                >
+                  {creatingRoom ? "Creating..." : "Create Room"}
+                </button>
+              </form>
+            )}
+
             {loadingRooms ? (
               <div className="text-sm text-slate-500">Loading rooms...</div>
             ) : chatRooms.length ? (
@@ -149,7 +242,7 @@ export default function ChatPortalPage() {
                   </p>
                 </div>
 
-                <div className="h-96 overflow-y-auto p-4 space-y-4">
+                <div className="min-h-[40vh] max-h-[65vh] overflow-y-auto p-4 space-y-4 md:h-96">
                   {loadingMessages ? (
                     <div className="text-center text-sm text-slate-500">
                       Loading messages...
@@ -165,7 +258,7 @@ export default function ChatPortalPage() {
                         }`}
                       >
                         <div
-                          className={`max-w-xs rounded-lg px-3 py-2 text-sm ${
+                          className={`max-w-full rounded-lg px-3 py-2 text-sm sm:max-w-xs ${
                             message.user?.id === user?.id
                               ? "bg-slate-900 text-white"
                               : "bg-slate-100 text-slate-900"
@@ -174,7 +267,7 @@ export default function ChatPortalPage() {
                           <div className="font-medium text-xs mb-1">
                             {message.user?.fullName || "Unknown"}
                           </div>
-                          <div>{message.message}</div>
+                          <div>{message.content}</div>
                           <div className="text-xs opacity-75 mt-1">
                             {new Date(message.createdAt).toLocaleString()}
                           </div>
@@ -190,7 +283,10 @@ export default function ChatPortalPage() {
                 </div>
 
                 <div className="border-t border-slate-200 p-4">
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                  <form
+                    onSubmit={handleSendMessage}
+                    className="flex flex-col gap-2 sm:flex-row"
+                  >
                     <input
                       type="text"
                       value={newMessage}
@@ -202,7 +298,7 @@ export default function ChatPortalPage() {
                     <button
                       type="submit"
                       disabled={sendingMessage || !newMessage.trim()}
-                      className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                      className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
                     >
                       {sendingMessage ? "Sending..." : "Send"}
                     </button>
@@ -210,7 +306,7 @@ export default function ChatPortalPage() {
                 </div>
               </>
             ) : (
-              <div className="flex h-96 items-center justify-center text-sm text-slate-500">
+              <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500 md:h-96">
                 Select a chat room to start chatting
               </div>
             )}

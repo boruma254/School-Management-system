@@ -1,5 +1,5 @@
-const express = require('express');
-const authorizeRoles = require('../middleware/roleMiddleware');
+const express = require("express");
+const authorizeRoles = require("../middleware/roleMiddleware");
 const {
   createFeeStructure,
   listFeeStructures,
@@ -11,48 +11,47 @@ const {
   mpesaInitValidation,
   studentIdParamValidation,
   receiptParamValidation,
-} = require('../controllers/financeController');
+} = require("../controllers/financeController");
 
 const router = express.Router();
 
 router.get(
-  '/fee-structures',
-  authorizeRoles('ADMIN', 'FINANCE'),
-  listFeeStructures
+  "/fee-structures",
+  authorizeRoles("ADMIN", "FINANCE"),
+  listFeeStructures,
 );
 
 router.get(
-  '/students/me/fee-summary',
-  authorizeRoles('STUDENT'),
-  getMyFeeSummary
+  "/students/me/fee-summary",
+  authorizeRoles("STUDENT"),
+  getMyFeeSummary,
 );
 router.post(
-  '/fee-structures',
-  authorizeRoles('ADMIN', 'FINANCE'),
+  "/fee-structures",
+  authorizeRoles("ADMIN", "FINANCE"),
   feeStructureValidation,
-  createFeeStructure
+  createFeeStructure,
 );
 
 router.post(
-  '/mpesa/stk-push',
-  authorizeRoles('ADMIN', 'FINANCE'),
+  "/mpesa/stk-push",
+  authorizeRoles("STUDENT", "ADMIN", "FINANCE"),
   mpesaInitValidation,
-  initiateMpesa
+  initiateMpesa,
 );
 
 router.get(
-  '/students/:studentId/payments',
-  authorizeRoles('ADMIN', 'FINANCE', 'STUDENT'),
+  "/students/:studentId/payments",
+  authorizeRoles("ADMIN", "FINANCE", "STUDENT"),
   studentIdParamValidation,
-  listStudentPayments
+  listStudentPayments,
 );
 
 router.get(
-  '/receipts/:paymentId',
-  authorizeRoles('ADMIN', 'FINANCE', 'STUDENT'),
+  "/receipts/:paymentId",
+  authorizeRoles("ADMIN", "FINANCE", "STUDENT"),
   receiptParamValidation,
-  getReceipt
+  getReceipt,
 );
 
 module.exports = router;
-
