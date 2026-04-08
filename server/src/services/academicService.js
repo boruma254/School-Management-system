@@ -342,13 +342,48 @@ async function getChatRoomDocuments(roomId) {
   });
 }
 
+async function resolveStudentReference(reference) {
+  if (!reference || typeof reference !== "string") {
+    return null;
+  }
+
+  const value = reference.trim();
+  if (!value) {
+    return null;
+  }
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidPattern.test(value)) {
+    const studentById = await prisma.student.findUnique({
+      where: { id: value },
+    });
+    if (studentById) {
+      return studentById;
+    }
+  }
+
+  return prisma.student.findFirst({
+    where: {
+      OR: [{ admissionNumber: value }, { user: { email: value } }],
+    },
+  });
+}
+
 async function uploadAttendance(data) {
   const records = [];
 
-  for (const record of data.attendanceData) {
+  for (const [index, record] of data.attendanceData.entries()) {
+    const matchedStudent = await resolveStudentReference(record.studentId);
+    if (!matchedStudent) {
+      throw new Error(
+        `Student not found for attendance row ${index + 1}: ${record.studentId}`,
+      );
+    }
+
     const attendance = await prisma.attendance.create({
       data: {
-        studentId: record.studentId,
+        studentId: matchedStudent.id,
         lecturerId: data.lecturerId,
         date: new Date(record.date),
         status: record.status,

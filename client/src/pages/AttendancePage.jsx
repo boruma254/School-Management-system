@@ -71,12 +71,19 @@ export default function AttendancePage() {
         });
 
         const studentId =
-          record.studentid || record.student_id || record.student;
+          record.studentid ||
+          record.student_id ||
+          record.student ||
+          record.admissionnumber ||
+          record.admission_number ||
+          record.email;
         const rawStatus = (record.status || "PRESENT").toUpperCase();
         const dateValue = record.date || new Date().toISOString().split("T")[0];
 
         if (!studentId) {
-          throw new Error(`Invalid CSV row ${i}: missing studentId value.`);
+          throw new Error(
+            `Invalid CSV row ${i}: missing studentId/admissionNumber/email value.`,
+          );
         }
 
         const status = ["PRESENT", "ABSENT", "LATE"].includes(rawStatus)
@@ -170,8 +177,8 @@ export default function AttendancePage() {
             Upload Attendance Sheet
           </h2>
           <p className="mb-4 text-sm text-slate-600">
-            CSV Format: studentId, status (PRESENT/ABSENT/LATE), date
-            (YYYY-MM-DD)
+            CSV Format: studentId/admissionNumber/email, status
+            (PRESENT/ABSENT/LATE), date (YYYY-MM-DD)
           </p>
           <form onSubmit={handleUploadAttendance} className="space-y-4">
             <div>
