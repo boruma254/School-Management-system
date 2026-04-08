@@ -124,6 +124,28 @@ export default function AttendancePage() {
     }
   };
 
+  const downloadAttendanceTemplate = async () => {
+    try {
+      const response = await api.get("/academic/attendance/template", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "attendance_template.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to download attendance template.",
+      );
+    }
+  };
+
   const statusColor = {
     PRESENT: "bg-emerald-100 text-emerald-700",
     ABSENT: "bg-rose-100 text-rose-700",
@@ -181,17 +203,26 @@ export default function AttendancePage() {
             (PRESENT/ABSENT/LATE), date (YYYY-MM-DD)
           </p>
           <form onSubmit={handleUploadAttendance} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                CSV File
-              </label>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                required
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              />
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  CSV File
+                </label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                  required
+                  className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={downloadAttendanceTemplate}
+                className="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                Download All-Students Template
+              </button>
             </div>
             <div className="flex gap-3">
               <button

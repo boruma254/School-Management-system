@@ -135,6 +135,11 @@ router.get(
 );
 
 // Attendance
+router.get(
+  "/attendance/template",
+  authorizeRoles("LECTURER"),
+  downloadAttendanceTemplate,
+);
 router.post("/attendance/upload", authorizeRoles("LECTURER"), uploadAttendance);
 router.get("/attendance/my", authorizeRoles("STUDENT"), getMyAttendance);
 

@@ -418,6 +418,17 @@ async function getStudentAttendance(studentId) {
   });
 }
 
+async function getAttendanceTemplateStudents() {
+  return prisma.student.findMany({
+    include: {
+      user: true,
+    },
+    orderBy: {
+      admissionNumber: "asc",
+    },
+  });
+}
+
 module.exports = {
   createDepartment,
   listDepartments,
@@ -441,4 +452,5 @@ module.exports = {
   getChatRoomDocuments,
   uploadAttendance,
   getStudentAttendance,
+  getAttendanceTemplateStudents,
 };

@@ -1,0 +1,4 @@
+studentId,status,date
+student@kisitvet.local,PRESENT,2026-04-08
+student@example.com,ABSENT,2026-04-08
+12345,LATE,2026-04-08

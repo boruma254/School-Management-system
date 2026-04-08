@@ -309,6 +309,36 @@ async function uploadAttendance(req, res, next) {
   }
 }
 
+async function downloadAttendanceTemplate(req, res, next) {
+  try {
+    const students = await academicService.getAttendanceTemplateStudents();
+    const header = ["studentId", "admissionNumber", "email", "status", "date"];
+    const lines = [header.join(",")];
+
+    for (const student of students) {
+      lines.push(
+        [
+          student.id,
+          student.admissionNumber || "",
+          student.user?.email || "",
+          "",
+          "",
+        ].join(","),
+      );
+    }
+
+    const csv = lines.join("\n");
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=attendance_template.csv",
+    );
+    res.send(csv);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function getMyAttendance(req, res, next) {
   try {
     const student = await academicService.getStudentByUserId(req.user.id);
@@ -349,6 +379,7 @@ module.exports = {
   uploadChatRoomDocument,
   getChatRoomDocuments,
   uploadAttendance,
+  downloadAttendanceTemplate,
   getMyAttendance,
   lecturerDocumentValidation,
   chatRoomValidation,
