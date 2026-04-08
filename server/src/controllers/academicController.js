@@ -236,6 +236,67 @@ async function getChatMessages(req, res, next) {
   }
 }
 
+async function uploadChatRoomDocument(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const document = await academicService.uploadChatRoomDocument({
+      roomId: req.params.roomId,
+      userId: req.user.id,
+      title: req.body.title,
+      fileName: req.file.filename,
+      filePath: req.file.path,
+    });
+    res.status(201).json({ document });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getChatRoomDocuments(req, res, next) {
+  try {
+    const documents = await academicService.getChatRoomDocuments(
+      req.params.roomId,
+    );
+    res.json({ documents });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function uploadAttendance(req, res, next) {
+  try {
+    const lecturer = await academicService.getLecturerByUserId(req.user.id);
+    if (!lecturer) {
+      return res.status(404).json({ message: "Lecturer profile not found" });
+    }
+
+    const attendance = await academicService.uploadAttendance({
+      lecturerId: lecturer.id,
+      attendanceData: req.body.attendanceData, // Array of {studentId, status, date}
+    });
+    res.status(201).json({ attendance });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getMyAttendance(req, res, next) {
+  try {
+    const student = await academicService.getStudentByUserId(req.user.id);
+    if (!student) {
+      return res.status(404).json({ message: "Student profile not found" });
+    }
+
+    const attendance = await academicService.getStudentAttendance(student.id);
+    res.json({ attendance });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createDepartment,
   listDepartments,
@@ -259,6 +320,10 @@ module.exports = {
   listChatRooms,
   createChatMessage,
   getChatMessages,
+  uploadChatRoomDocument,
+  getChatRoomDocuments,
+  uploadAttendance,
+  getMyAttendance,
   lecturerDocumentValidation,
   chatRoomValidation,
   chatMessageValidation,

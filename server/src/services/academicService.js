@@ -304,6 +304,85 @@ async function getChatMessages(roomId, limit = 50) {
   });
 }
 
+async function uploadChatRoomDocument(data) {
+  return prisma.chatRoomDocument.create({
+    data: {
+      roomId: data.roomId,
+      userId: data.userId,
+      title: data.title,
+      fileName: data.fileName,
+      filePath: data.filePath,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+      room: true,
+    },
+  });
+}
+
+async function getChatRoomDocuments(roomId) {
+  return prisma.chatRoomDocument.findMany({
+    where: { roomId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+async function uploadAttendance(data) {
+  const records = [];
+
+  for (const record of data.attendanceData) {
+    const attendance = await prisma.attendance.create({
+      data: {
+        studentId: record.studentId,
+        lecturerId: data.lecturerId,
+        date: new Date(record.date),
+        status: record.status,
+      },
+      include: {
+        student: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+    records.push(attendance);
+  }
+
+  return records;
+}
+
+async function getStudentAttendance(studentId) {
+  return prisma.attendance.findMany({
+    where: { studentId },
+    include: {
+      lecturer: {
+        include: {
+          user: true,
+        },
+      },
+    },
+    orderBy: {
+      date: "desc",
+    },
+  });
+}
+
 module.exports = {
   createDepartment,
   listDepartments,
@@ -323,4 +402,8 @@ module.exports = {
   listChatRooms,
   createChatMessage,
   getChatMessages,
+  uploadChatRoomDocument,
+  getChatRoomDocuments,
+  uploadAttendance,
+  getStudentAttendance,
 };

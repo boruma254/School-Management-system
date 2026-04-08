@@ -14,6 +14,7 @@ const navItemsByRole = {
     { to: "/dashboard/lecturer", label: "Dashboard" },
     { to: "/dashboard/academic", label: "Academic" },
     { to: "/dashboard/chat", label: "Chat Rooms" },
+    { to: "/dashboard/attendance", label: "Attendance" },
   ],
   STUDENT: [
     { to: "/dashboard/student", label: "Dashboard" },
@@ -21,6 +22,7 @@ const navItemsByRole = {
     { to: "/dashboard/payments", label: "Payments" },
     { to: "/dashboard/documents", label: "Documents" },
     { to: "/dashboard/chat", label: "Chat Portal" },
+    { to: "/dashboard/attendance", label: "Attendance" },
   ],
   FINANCE: [
     { to: "/dashboard/finance", label: "Dashboard" },

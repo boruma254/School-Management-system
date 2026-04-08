@@ -17,6 +17,11 @@ export default function ChatPortalPage() {
   const [newRoomDescription, setNewRoomDescription] = useState("");
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [documents, setDocuments] = useState([]);
+  const [uploadDocOpen, setUploadDocOpen] = useState(false);
+  const [docTitle, setDocTitle] = useState("");
+  const [docFile, setDocFile] = useState(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -26,6 +31,7 @@ export default function ChatPortalPage() {
   useEffect(() => {
     if (selectedRoomId) {
       loadMessages(selectedRoomId);
+      loadDocuments(selectedRoomId);
     }
   }, [selectedRoomId]);
 
@@ -66,6 +72,15 @@ export default function ChatPortalPage() {
       setError("Failed to load messages.");
     } finally {
       setLoadingMessages(false);
+    }
+  };
+
+  const loadDocuments = async (roomId) => {
+    try {
+      const res = await api.get(`/academic/chat/rooms/${roomId}/documents`);
+      setDocuments(res.data.documents || []);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -110,6 +125,36 @@ export default function ChatPortalPage() {
       setError(err.response?.data?.message || "Failed to create chat room.");
     } finally {
       setCreatingRoom(false);
+    }
+  };
+
+  const handleUploadDocument = async (e) => {
+    e.preventDefault();
+    if (!docFile || !docTitle.trim() || !selectedRoomId) return;
+
+    const formData = new FormData();
+    formData.append("document", docFile);
+    formData.append("title", docTitle.trim());
+
+    setUploadingDoc(true);
+    try {
+      await api.post(
+        `/academic/chat/rooms/${selectedRoomId}/documents`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+      setDocTitle("");
+      setDocFile(null);
+      setUploadDocOpen(false);
+      setSuccessMessage("Document uploaded successfully.");
+      loadDocuments(selectedRoomId);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to upload document.");
+    } finally {
+      setUploadingDoc(false);
     }
   };
 
@@ -234,10 +279,103 @@ export default function ChatPortalPage() {
             {selectedRoom ? (
               <>
                 <div className="border-b border-slate-200 p-4">
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    {selectedRoom.name}
-                  </h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      {selectedRoom.name}
+                    </h2>
+                    {user?.role === "LECTURER" && (
+                      <button
+                        type="button"
+                        onClick={() => setUploadDocOpen(!uploadDocOpen)}
+                        className="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800"
+                      >
+                        📄 Upload Notes
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {uploadDocOpen && user?.role === "LECTURER" && (
+                  <div className="border-b border-slate-200 bg-slate-50 p-4">
+                    <form onSubmit={handleUploadDocument} className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700">
+                          Document Title
+                        </label>
+                        <input
+                          type="text"
+                          value={docTitle}
+                          onChange={(e) => setDocTitle(e.target.value)}
+                          required
+                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                          placeholder="e.g., Lecture Notes Week 3"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700">
+                          Select File
+                        </label>
+                        <input
+                          type="file"
+                          onChange={(e) =>
+                            setDocFile(e.target.files?.[0] || null)
+                          }
+                          required
+                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={uploadingDoc}
+                          className="flex-1 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                        >
+                          {uploadingDoc ? "Uploading..." : "Upload"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUploadDocOpen(false)}
+                          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {documents.length > 0 && (
+                  <div className="border-b border-slate-200 bg-blue-50 p-4">
+                    <div className="text-xs font-semibold text-slate-700 mb-2">
+                      📚 Room Resources ({documents.length})
+                    </div>
+                    <div className="space-y-2">
+                      {documents.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between rounded-md bg-white px-3 py-2 text-sm border border-blue-200"
+                        >
+                          <div>
+                            <div className="font-medium text-slate-900">
+                              {doc.title}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              by {doc.user?.fullName || "Unknown"}
+                            </div>
+                          </div>
+                          <a
+                            href={`/downloads/${doc.fileName}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                          >
+                            Download
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="min-h-[40vh] max-h-[65vh] overflow-y-auto p-4 space-y-4 md:h-96">
                   {loadingMessages ? (

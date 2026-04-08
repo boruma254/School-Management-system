@@ -19,6 +19,10 @@ const {
   listChatRooms,
   createChatMessage,
   getChatMessages,
+  uploadChatRoomDocument,
+  getChatRoomDocuments,
+  uploadAttendance,
+  getMyAttendance,
   departmentValidation,
   programValidation,
   unitValidation,
@@ -116,5 +120,22 @@ router.get(
   roomIdValidation,
   getChatMessages,
 );
+
+// Chat room documents
+router.post(
+  "/chat/rooms/:roomId/documents",
+  authorizeRoles("LECTURER"),
+  upload.single("document"),
+  uploadChatRoomDocument,
+);
+router.get(
+  "/chat/rooms/:roomId/documents",
+  authorizeRoles("STUDENT", "LECTURER"),
+  getChatRoomDocuments,
+);
+
+// Attendance
+router.post("/attendance/upload", authorizeRoles("LECTURER"), uploadAttendance);
+router.get("/attendance/my", authorizeRoles("STUDENT"), getMyAttendance);
 
 module.exports = router;

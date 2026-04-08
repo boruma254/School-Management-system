@@ -18,6 +18,7 @@ import SignupPage from "./pages/SignupPage";
 import StudentDocumentsPage from "./pages/StudentDocumentsPage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import ChatPortalPage from "./pages/ChatPortalPage";
+import AttendancePage from "./pages/AttendancePage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ResourcesPage from "./pages/ResourcesPage";
@@ -104,6 +105,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["STUDENT", "LECTURER"]}>
               <ChatPortalPage />
+            </ProtectedRoute>
+          }
+        />{" "}
+        <Route
+          path="attendance"
+          element={
+            <ProtectedRoute allowedRoles={["STUDENT", "LECTURER"]}>
+              <AttendancePage />
             </ProtectedRoute>
           }
         />{" "}

@@ -15,20 +15,21 @@ enum Role {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  fullName  String
-  email     String    @unique
+  id          String    @id @default(uuid())
+  fullName    String
+  email       String    @unique
   phoneNumber String?
-  password  String
-  role      Role
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  password    String
+  role        Role
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  student   Student?
-  lecturer  Lecturer?
-  auditLogs AuditLog[]
-  chatMessages ChatMessage[]
+  student             Student?
+  lecturer            Lecturer?
+  auditLogs           AuditLog[]
+  chatMessages        ChatMessage[]
+  chatRoomDocuments   ChatRoomDocument[]
 }
 
 model Department {
@@ -57,13 +58,14 @@ model Student {
   currentSemester Int
   status          String
 
-  user        User       @relation(fields: [userId], references: [id])
-  program     Program    @relation(fields: [programId], references: [id])
-  enrollments Enrollment[]
-  payments    Payment[]
-  department  Department? @relation(fields: [departmentId], references: [id])
-  departmentId String?
+  user          User          @relation(fields: [userId], references: [id])
+  program       Program       @relation(fields: [programId], references: [id])
+  enrollments   Enrollment[]
+  payments      Payment[]
+  department    Department?   @relation(fields: [departmentId], references: [id])
+  departmentId  String?
   notifications Notification[]
+  attendances   Attendance[]
 }
 
 model Lecturer {
@@ -71,10 +73,11 @@ model Lecturer {
   userId       String     @unique
   departmentId String
 
-  user        User       @relation(fields: [userId], references: [id])
-  department  Department @relation(fields: [departmentId], references: [id])
-  documents   LecturerDocument[]
+  user          User              @relation(fields: [userId], references: [id])
+  department    Department        @relation(fields: [departmentId], references: [id])
+  documents     LecturerDocument[]
   notifications Notification[]
+  attendances   Attendance[]
 }
 
 model Unit {
@@ -174,8 +177,9 @@ model ChatRoom {
   unitId    String?
   createdAt DateTime @default(now())
 
-  unit     Unit?         @relation(fields: [unitId], references: [id])
-  messages ChatMessage[]
+  unit      Unit?               @relation(fields: [unitId], references: [id])
+  messages  ChatMessage[]
+  documents ChatRoomDocument[]
 }
 
 model ChatMessage {
@@ -187,6 +191,31 @@ model ChatMessage {
 
   room ChatRoom @relation(fields: [roomId], references: [id])
   user User     @relation(fields: [userId], references: [id])
+}
+
+model ChatRoomDocument {
+  id        String   @id @default(uuid())
+  roomId    String
+  userId    String
+  title     String
+  fileName  String
+  filePath  String
+  createdAt DateTime @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  studentId String
+  lecturerId String
+  date      DateTime
+  status    String   @default("PRESENT") // PRESENT, ABSENT, LATE
+  createdAt DateTime @default(now())
+
+  student   Student  @relation(fields: [studentId], references: [id])
+  lecturer  Lecturer @relation(fields: [lecturerId], references: [id])
 }
 
 model Notification {
