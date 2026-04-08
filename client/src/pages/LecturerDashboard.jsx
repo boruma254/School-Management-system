@@ -148,11 +148,7 @@ export default function LecturerDashboard() {
     formData.append("document", e.target.document.files[0]);
 
     try {
-      await api.post("/academic/documents", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await api.post("/academic/documents", formData);
       setDocumentTitle("");
       setDocumentDescription("");
       e.target.reset();

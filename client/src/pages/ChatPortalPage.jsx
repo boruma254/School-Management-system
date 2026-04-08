@@ -141,9 +141,6 @@ export default function ChatPortalPage() {
       await api.post(
         `/academic/chat/rooms/${selectedRoomId}/documents`,
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
       );
       setDocTitle("");
       setDocFile(null);
