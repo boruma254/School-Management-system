@@ -347,7 +347,10 @@ async function resolveStudentReference(reference) {
     return null;
   }
 
-  const value = reference.trim();
+  const value = String(reference)
+    .trim()
+    .replace(/^\uFEFF/, "")
+    .replace(/^['"]|['"]$/g, "");
   if (!value) {
     return null;
   }
@@ -371,8 +374,7 @@ async function resolveStudentReference(reference) {
 }
 
 async function uploadAttendance(data) {
-  const records = [];
-
+  const attendanceRows = [];
   for (const [index, record] of data.attendanceData.entries()) {
     const matchedStudent = await resolveStudentReference(record.studentId);
     if (!matchedStudent) {
@@ -381,25 +383,58 @@ async function uploadAttendance(data) {
       );
     }
 
-    const attendance = await prisma.attendance.create({
-      data: {
-        studentId: matchedStudent.id,
-        lecturerId: data.lecturerId,
-        date: new Date(record.date),
-        status: record.status,
-      },
-      include: {
-        student: {
-          include: {
-            user: true,
-          },
-        },
-      },
+    attendanceRows.push({
+      studentId: matchedStudent.id,
+      lecturerId: data.lecturerId,
+      date: new Date(record.date),
+      status: record.status,
     });
-    records.push(attendance);
   }
 
-  return records;
+  return prisma.$transaction(async (tx) => {
+    const sheet = await tx.attendanceSheet.create({
+      data: {
+        lecturerId: data.lecturerId,
+        title: data.sheetTitle || "Attendance Sheet",
+        fileName: data.fileName || null,
+        filePath: data.filePath || null,
+      },
+    });
+
+    const records = [];
+    for (const row of attendanceRows) {
+      const attendance = await tx.attendance.create({
+        data: {
+          ...row,
+          sheetId: sheet.id,
+        },
+        include: {
+          student: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+      records.push(attendance);
+    }
+
+    return { sheet, records };
+  });
+}
+
+async function getAttendanceSheets(lecturerId) {
+  return prisma.attendanceSheet.findMany({
+    where: { lecturerId },
+    include: {
+      attendances: {
+        select: {
+          id: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 async function getStudentAttendance(studentId) {
@@ -451,6 +486,7 @@ module.exports = {
   uploadChatRoomDocument,
   getChatRoomDocuments,
   uploadAttendance,
+  getAttendanceSheets,
   getStudentAttendance,
   getAttendanceTemplateStudents,
 };

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import api from '../services/api';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -10,12 +10,20 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('tvet_auth');
+    const stored = localStorage.getItem("tvet_auth");
     if (stored) {
-      const parsed = JSON.parse(stored);
-      setUser(parsed.user);
-      setAccessToken(parsed.accessToken);
-      setRefreshToken(parsed.refreshToken);
+      try {
+        const parsed = JSON.parse(stored);
+        setUser(parsed.user);
+        setAccessToken(parsed.accessToken);
+        setRefreshToken(parsed.refreshToken);
+      } catch (error) {
+        console.warn(
+          "Failed to parse stored auth data, clearing invalid localStorage.",
+          error,
+        );
+        localStorage.removeItem("tvet_auth");
+      }
     }
     setLoading(false);
   }, []);
@@ -31,11 +39,11 @@ export function AuthProvider({ children }) {
     setAccessToken(payload.accessToken);
     setRefreshToken(payload.refreshToken);
     api.setToken(payload.accessToken);
-    localStorage.setItem('tvet_auth', JSON.stringify(payload));
+    localStorage.setItem("tvet_auth", JSON.stringify(payload));
   };
 
   const login = async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
+    const res = await api.post("/auth/login", { email, password });
     saveAuth(res.data);
   };
 
@@ -44,7 +52,7 @@ export function AuthProvider({ children }) {
     setAccessToken(null);
     setRefreshToken(null);
     api.setToken(null);
-    localStorage.removeItem('tvet_auth');
+    localStorage.removeItem("tvet_auth");
   };
 
   const value = {
@@ -62,4 +70,3 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-

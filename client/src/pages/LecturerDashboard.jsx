@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -9,6 +10,9 @@ export default function LecturerDashboard() {
   const [enrollments, setEnrollments] = useState([]);
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
+  const [sheetCount, setSheetCount] = useState(0);
+  const [recordCount, setRecordCount] = useState(0);
   const [error, setError] = useState("");
   const [gradeInputs, setGradeInputs] = useState({});
   const [savingGrade, setSavingGrade] = useState("");
@@ -40,6 +44,31 @@ export default function LecturerDashboard() {
       .finally(() => {
         if (isMounted) setLoadingUnits(false);
       });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    setAttendanceLoading(true);
+    api
+      .get("/academic/attendance/sheets")
+      .then((res) => {
+        if (!isMounted) return;
+        const sheets = res.data.sheets || [];
+        setSheetCount(sheets.length);
+        setRecordCount(
+          sheets.reduce((sum, sheet) => sum + (sheet.studentCount || 0), 0),
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        if (isMounted) setAttendanceLoading(false);
+      });
+
     return () => {
       isMounted = false;
     };
@@ -480,8 +509,23 @@ export default function LecturerDashboard() {
               Record Attendance
             </div>
             <div className="mt-1 text-sm text-slate-600">
-              Attendance tracking is not yet available in the backend. Once
-              attendance logs are added, this card can become interactive.
+              Upload attendance sheets from the attendance page and apply them
+              to all students in a single record.
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <Link
+                to="/dashboard/attendance"
+                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Go to Attendance
+              </Link>
+              {attendanceLoading ? (
+                <span className="text-sm text-slate-500">Loading...</span>
+              ) : (
+                <span className="text-sm text-slate-500">
+                  {sheetCount} sheet{sheetCount === 1 ? "" : "s"} uploaded
+                </span>
+              )}
             </div>
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -489,8 +533,15 @@ export default function LecturerDashboard() {
               Attendance Reports
             </div>
             <div className="mt-1 text-sm text-slate-600">
-              Reporting will appear after attendance records are stored by the
-              system.
+              Review attendance summaries and uploaded sheets once attendance
+              data exists.
+            </div>
+            <div className="mt-4 text-sm text-slate-500">
+              {attendanceLoading
+                ? "Loading sheet totals..."
+                : `${recordCount} attendance records from ${sheetCount} sheet${
+                    sheetCount === 1 ? "" : "s"
+                  }`}
             </div>
           </div>
         </div>

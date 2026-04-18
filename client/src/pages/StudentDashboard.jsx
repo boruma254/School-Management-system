@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import NotificationsPanel from "../components/NotificationsPanel";
@@ -18,28 +19,36 @@ export default function StudentDashboard() {
   const [student, setStudent] = useState(null);
   const [feeSummary, setFeeSummary] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
     let isMounted = true;
     setLoading(true);
+    setAttendanceLoading(true);
 
     Promise.all([
       api.get("/students/me"),
       api.get("/finance/students/me/fee-summary"),
+      api.get("/academic/attendance/my"),
     ])
-      .then(([studentRes, feeRes]) => {
+      .then(([studentRes, feeRes, attendanceRes]) => {
         if (!isMounted) return;
         const me = studentRes.data.student;
         setStudent(me);
         setFeeSummary(feeRes.data.summary);
         setPayments(me?.payments || []);
+        setAttendanceRecords(attendanceRes.data.attendance || []);
       })
       .catch((err) => console.error(err))
       .finally(() => {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setAttendanceLoading(false);
+        }
       });
 
     return () => {
@@ -63,11 +72,17 @@ export default function StudentDashboard() {
 
   const quickStats = useMemo(() => {
     const unitsRegistered = enrollments.length;
-    const attendancePercent = 92; // Backend biometric attendance not implemented yet (placeholder)
+    const presentCount = attendanceRecords.filter(
+      (a) => a.status === "PRESENT",
+    ).length;
+    const totalCount = attendanceRecords.length;
+    const attendancePercent = totalCount
+      ? Math.round((presentCount / totalCount) * 100)
+      : 0;
     const semester = student?.currentSemester;
 
     return { unitsRegistered, attendancePercent, semester };
-  }, [enrollments.length, student?.currentSemester]);
+  }, [enrollments.length, attendanceRecords, student?.currentSemester]);
 
   const results = useMemo(() => {
     return enrollments.map((e) => {
@@ -434,21 +449,42 @@ export default function StudentDashboard() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-xl bg-white p-4 shadow-sm">
                 <div className="text-sm font-semibold text-slate-800">
-                  Biometric Attendance
+                  Attendance Overview
                 </div>
                 <div className="mt-1 text-sm text-slate-600">
-                  Biometric sync and attendance logs are not implemented in the
-                  backend yet.
+                  Your attendance is based on uploaded lecturer attendance
+                  sheets.
+                </div>
+                <div className="mt-4 text-sm text-slate-500">
+                  {attendanceLoading
+                    ? "Loading attendance..."
+                    : attendanceRecords.length
+                      ? `${attendanceRecords.length} attendance records available`
+                      : "No attendance records yet."}
                 </div>
               </div>
               <div className="rounded-xl bg-white p-4 shadow-sm">
                 <div className="text-sm font-semibold text-slate-800">
-                  Missed Classes Alerts
+                  Attendance Progress
                 </div>
-                <div className="mt-1 text-sm text-slate-600">
-                  Attendance-based alerts will appear once attendance data is
-                  connected.
+                <div className="mt-1 text-2xl font-semibold text-slate-900">
+                  {attendanceLoading
+                    ? "--"
+                    : `${quickStats.attendancePercent}%`}
                 </div>
+                <div className="mt-2 text-sm text-slate-500">
+                  {attendanceLoading
+                    ? "Loading..."
+                    : attendanceRecords.length
+                      ? `${attendanceRecords.filter((a) => a.status === "PRESENT").length} present, ${attendanceRecords.filter((a) => a.status === "ABSENT").length} absent, ${attendanceRecords.filter((a) => a.status === "LATE").length} late`
+                      : "No attendance history available yet."}
+                </div>
+                <Link
+                  to="/dashboard/attendance"
+                  className="mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  View Attendance Details
+                </Link>
               </div>
             </div>
           </section>

@@ -5,9 +5,12 @@ import api from "../services/api";
 export default function AttendancePage() {
   const { user } = useAuth();
   const [attendance, setAttendance] = useState([]);
+  const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sheetsLoading, setSheetsLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [sheetTitle, setSheetTitle] = useState("");
   const [csvFile, setCsvFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -18,7 +21,23 @@ export default function AttendancePage() {
     if (user.role === "STUDENT") {
       loadMyAttendance();
     }
+    if (user.role === "LECTURER") {
+      loadAttendanceSheets();
+    }
   }, [user]);
+
+  const loadAttendanceSheets = async () => {
+    setSheetsLoading(true);
+    try {
+      const res = await api.get("/academic/attendance/sheets");
+      setSheets(res.data.sheets || []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load attendance sheets.");
+    } finally {
+      setSheetsLoading(false);
+    }
+  };
 
   const loadMyAttendance = async () => {
     try {
@@ -70,15 +89,27 @@ export default function AttendancePage() {
           record[header] = values[idx];
         });
 
-        const studentId =
+        const rawStudentId =
           record.studentid ||
           record.student_id ||
           record.student ||
           record.admissionnumber ||
           record.admission_number ||
           record.email;
-        const rawStatus = (record.status || "PRESENT").toUpperCase();
-        const dateValue = record.date || new Date().toISOString().split("T")[0];
+        const studentId = rawStudentId
+          ? String(rawStudentId)
+              .trim()
+              .replace(/^['"]|['"]$/g, "")
+          : "";
+        const rawStatus = String(record.status || "PRESENT")
+          .trim()
+          .replace(/^['"]|['"]$/g, "")
+          .toUpperCase();
+        const dateValue = String(
+          record.date || new Date().toISOString().split("T")[0],
+        )
+          .trim()
+          .replace(/^['"]|['"]$/g, "");
 
         if (!studentId) {
           throw new Error(
@@ -107,11 +138,15 @@ export default function AttendancePage() {
 
       await api.post("/academic/attendance/upload", {
         attendanceData,
+        sheetTitle,
+        fileName: csvFile.name,
       });
 
       setCsvFile(null);
+      setSheetTitle("");
       setUploadOpen(false);
       setSuccessMessage("Attendance records uploaded successfully.");
+      loadAttendanceSheets();
     } catch (err) {
       console.error(err);
       setError(
@@ -203,7 +238,19 @@ export default function AttendancePage() {
             (PRESENT/ABSENT/LATE), date (YYYY-MM-DD)
           </p>
           <form onSubmit={handleUploadAttendance} className="space-y-4">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Sheet Title (optional)
+                </label>
+                <input
+                  type="text"
+                  value={sheetTitle}
+                  onChange={(e) => setSheetTitle(e.target.value)}
+                  placeholder="e.g. Week 3 Attendance"
+                  className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700">
                   CSV File
@@ -219,7 +266,7 @@ export default function AttendancePage() {
               <button
                 type="button"
                 onClick={downloadAttendanceTemplate}
-                className="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                className="h-fit rounded-md border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
                 Download All-Students Template
               </button>
@@ -241,6 +288,89 @@ export default function AttendancePage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {user.role === "LECTURER" && (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl bg-slate-50 p-4 shadow-sm">
+              <div className="text-sm font-medium text-slate-700">
+                Attendance Sheets
+              </div>
+              <div className="mt-2 text-3xl font-bold text-slate-900">
+                {sheets.length}
+              </div>
+            </div>
+            <div className="rounded-xl bg-slate-50 p-4 shadow-sm">
+              <div className="text-sm font-medium text-slate-700">
+                Most Recent Sheet
+              </div>
+              <div className="mt-2 text-lg font-semibold text-slate-900">
+                {sheets[0]?.title || "—"}
+              </div>
+            </div>
+            <div className="rounded-xl bg-slate-50 p-4 shadow-sm">
+              <div className="text-sm font-medium text-slate-700">
+                Last Uploaded
+              </div>
+              <div className="mt-2 text-lg font-semibold text-slate-900">
+                {sheets[0]
+                  ? new Date(sheets[0].createdAt).toLocaleDateString()
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          {sheetsLoading ? (
+            <div className="rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+              Loading attendance sheets...
+            </div>
+          ) : sheets.length ? (
+            <div className="rounded-xl bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900">
+                        Title
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900">
+                        Created At
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900">
+                        Student Records
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sheets.map((sheet) => (
+                      <tr
+                        key={sheet.id}
+                        className="border-b border-slate-200 hover:bg-slate-50"
+                      >
+                        <td className="px-4 py-3 text-sm text-slate-900">
+                          {sheet.title}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900">
+                          {new Date(sheet.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-900">
+                          {sheet.studentCount}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-white p-6 text-center">
+              <p className="text-sm text-slate-500">
+                No attendance sheets uploaded yet.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

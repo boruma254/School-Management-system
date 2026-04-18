@@ -1,8 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 const instance = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
 });
 
 function setToken(token) {
@@ -17,18 +16,26 @@ instance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    if (
-      error.response &&
-      error.response.status === 401 &&
-      !original._retry
-    ) {
+    if (error.response && error.response.status === 401 && !original._retry) {
       original._retry = true;
-      const stored = localStorage.getItem('tvet_auth');
+      const stored = localStorage.getItem("tvet_auth");
       if (stored) {
-        const { refreshToken } = JSON.parse(stored);
+        let parsed;
+        try {
+          parsed = JSON.parse(stored);
+        } catch (parseError) {
+          console.warn(
+            "Invalid auth data in localStorage, clearing stored auth.",
+            parseError,
+          );
+          localStorage.removeItem("tvet_auth");
+          return Promise.reject(error);
+        }
+
+        const { refreshToken } = parsed;
         if (refreshToken) {
           try {
-            const res = await instance.post('/auth/refresh', {
+            const res = await instance.post("/auth/refresh", {
               refreshToken,
             });
             const newAccessToken = res.data.accessToken;
@@ -37,18 +44,18 @@ instance.interceptors.response.use(
               ...parsed,
               accessToken: newAccessToken,
             };
-            localStorage.setItem('tvet_auth', JSON.stringify(payload));
+            localStorage.setItem("tvet_auth", JSON.stringify(payload));
             setToken(newAccessToken);
             original.headers.Authorization = `Bearer ${newAccessToken}`;
             return instance(original);
           } catch (e) {
-            localStorage.removeItem('tvet_auth');
+            localStorage.removeItem("tvet_auth");
           }
         }
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 const api = {
@@ -60,4 +67,3 @@ const api = {
 };
 
 export default api;
-

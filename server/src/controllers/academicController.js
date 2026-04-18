@@ -302,8 +302,32 @@ async function uploadAttendance(req, res, next) {
     const attendance = await academicService.uploadAttendance({
       lecturerId: lecturer.id,
       attendanceData,
+      sheetTitle: req.body.sheetTitle,
+      fileName: req.body.fileName,
+      filePath: req.body.filePath,
     });
     res.status(201).json({ attendance });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getAttendanceSheets(req, res, next) {
+  try {
+    const lecturer = await academicService.getLecturerByUserId(req.user.id);
+    if (!lecturer) {
+      return res.status(404).json({ message: "Lecturer profile not found" });
+    }
+
+    const sheets = await academicService.getAttendanceSheets(lecturer.id);
+    const sheetSummaries = sheets.map((sheet) => ({
+      id: sheet.id,
+      title: sheet.title,
+      createdAt: sheet.createdAt,
+      studentCount: sheet.attendances.length,
+    }));
+
+    res.json({ sheets: sheetSummaries });
   } catch (err) {
     next(err);
   }
@@ -379,6 +403,7 @@ module.exports = {
   uploadChatRoomDocument,
   getChatRoomDocuments,
   uploadAttendance,
+  getAttendanceSheets,
   downloadAttendanceTemplate,
   getMyAttendance,
   lecturerDocumentValidation,

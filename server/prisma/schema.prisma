@@ -66,6 +66,7 @@ model Student {
   departmentId  String?
   notifications Notification[]
   attendances   Attendance[]
+  leaveRequests LeaveRequest[]
 }
 
 model Lecturer {
@@ -78,6 +79,7 @@ model Lecturer {
   documents     LecturerDocument[]
   notifications Notification[]
   attendances   Attendance[]
+  attendanceSheets AttendanceSheet[]
 }
 
 model Unit {
@@ -90,6 +92,9 @@ model Unit {
   program     Program     @relation(fields: [programId], references: [id])
   enrollments Enrollment[]
   chatRooms   ChatRoom[]
+  schedules   Schedule[]
+  prerequisites Prerequisite[] @relation("UnitPrerequisites")
+  prerequisitesFor Prerequisite[] @relation("PrerequisiteFor")
 }
 
 model Enrollment {
@@ -206,16 +211,30 @@ model ChatRoomDocument {
   user User     @relation(fields: [userId], references: [id])
 }
 
+model AttendanceSheet {
+  id         String      @id @default(uuid())
+  lecturerId String
+  title      String      @default("Attendance Sheet")
+  fileName   String?
+  filePath   String?
+  createdAt  DateTime    @default(now())
+
+  lecturer Lecturer @relation(fields: [lecturerId], references: [id])
+  attendances Attendance[]
+}
+
 model Attendance {
   id        String   @id @default(uuid())
   studentId String
   lecturerId String
+  sheetId   String?
   date      DateTime
   status    String   @default("PRESENT") // PRESENT, ABSENT, LATE
   createdAt DateTime @default(now())
 
-  student   Student  @relation(fields: [studentId], references: [id])
-  lecturer  Lecturer @relation(fields: [lecturerId], references: [id])
+  student   Student       @relation(fields: [studentId], references: [id])
+  lecturer  Lecturer      @relation(fields: [lecturerId], references: [id])
+  sheet     AttendanceSheet? @relation(fields: [sheetId], references: [id])
 }
 
 model Notification {
@@ -230,5 +249,63 @@ model Notification {
 
   student   Student   @relation(fields: [studentId], references: [id])
   lecturer  Lecturer? @relation(fields: [lecturerId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+}
+
+model Schedule {
+  id        String   @id @default(uuid())
+  unitId    String
+  dayOfWeek String   // MONDAY, TUESDAY, etc.
+  startTime String   // HH:MM format
+  endTime   String   // HH:MM format
+  room      String?
+  lecturerId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  unit     Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+}
+
+model Prerequisite {
+  id          String   @id @default(uuid())
+  unitId      String   // The unit that has the prerequisite
+  prerequisiteUnitId String  // The unit that must be completed first
+  createdAt   DateTime @default(now())
+
+  unit          Unit @relation("UnitPrerequisites", fields: [unitId], references: [id], onDelete: Cascade)
+  prerequisiteUnit Unit @relation("PrerequisiteFor", fields: [prerequisiteUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([unitId, prerequisiteUnitId])
+}
+
+model LeaveRequest {
+  id        String   @id @default(uuid())
+  studentId String
+  reason    String
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?
+  requestedAt DateTime @default(now())
+  respondedAt DateTime?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model TwoFactorAuth {
+  id      String   @id @default(uuid())
+  userId  String   @unique
+  secret  String
+  enabled Boolean  @default(false)
+  backupCodes String[] // JSON array of backup codes
+  createdAt DateTime @default(now())
 }
 

@@ -475,6 +475,48 @@ async function main() {
     }
   }
 
+  // Create sample attendance records for all seeded students if not present
+  const allStudents = await prisma.student.findMany({
+    where: { status: "ACTIVE" },
+    include: { user: true },
+  });
+  const lecturer = await prisma.lecturer.findUnique({
+    where: { userId: lecturerUser.id },
+  });
+
+  const existingAttendance = await prisma.attendance.count();
+  if (!existingAttendance && lecturer) {
+    const attendanceDates = [
+      new Date("2026-04-01T00:00:00.000Z"),
+      new Date("2026-04-02T00:00:00.000Z"),
+      new Date("2026-04-03T00:00:00.000Z"),
+    ];
+
+    const attendanceRecords = [];
+    for (const student of allStudents) {
+      for (let dayIndex = 0; dayIndex < attendanceDates.length; dayIndex += 1) {
+        const statusOptions = ["PRESENT", "ABSENT", "LATE"];
+        const status =
+          statusOptions[
+            (dayIndex + student.admissionNumber.length) % statusOptions.length
+          ];
+        attendanceRecords.push({
+          studentId: student.id,
+          lecturerId: lecturer.id,
+          date: attendanceDates[dayIndex],
+          status,
+        });
+      }
+    }
+
+    await prisma.attendance.createMany({
+      data: attendanceRecords,
+    });
+    console.log(
+      `Created ${attendanceRecords.length} sample attendance records.`,
+    );
+  }
+
   // Pending student (for testing signup approval flow)
   const pendingEmail = "pendingstudent@kisitvet.local";
   const pendingAdmissionNumber = "ADM-PENDING-0001";

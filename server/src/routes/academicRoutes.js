@@ -22,6 +22,8 @@ const {
   uploadChatRoomDocument,
   getChatRoomDocuments,
   uploadAttendance,
+  getAttendanceSheets,
+  downloadAttendanceTemplate,
   getMyAttendance,
   departmentValidation,
   programValidation,
@@ -139,6 +141,11 @@ router.get(
   "/attendance/template",
   authorizeRoles("LECTURER"),
   downloadAttendanceTemplate,
+);
+router.get(
+  "/attendance/sheets",
+  authorizeRoles("LECTURER"),
+  getAttendanceSheets,
 );
 router.post("/attendance/upload", authorizeRoles("LECTURER"), uploadAttendance);
 router.get("/attendance/my", authorizeRoles("STUDENT"), getMyAttendance);
